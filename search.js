@@ -1,9 +1,5 @@
-// Set new string prototype for 'trim()'
-if (typeof (String.prototype.trim) === "undefined") {
-        String.prototype.trim = function() {
-                return String(this).replace(/^\s+|\s+$/g, '');
-        };
-}
+/* Everything related to searching, displaying, fancy UI tweaks, etc.
+   I Should probably split this into separate JS files... */
 
 // Shortened version of getElementById
 function gebi(id) { return document.getElementById(id); }
@@ -274,6 +270,38 @@ function bytes_to_readable(bytes) {
 	return '?bytes'
 }
 
+function get_subreddits() {
+	var request = makeHttpObject();
+	gebi("subreddits").innerHTML = '<i>loading...</i>';
+	request.open("GET", 'subreddits.cgi?get=true', true);
+	request.send(null);
+	request.onreadystatechange = function() {
+		if (request.readyState == 4) { 
+			if (request.status == 200) {
+				// success
+				handleGetSubredditsResponse(request.responseText);
+			} else {
+				// error
+				gebi('subreddits').innerHTML = "<b>error: " + request.status + "</b>";
+			}
+		}
+	}
+}
+function handleGetSubredditsResponse(responseText) {
+	var json = JSON.parse(responseText);
+	if (json['error'] != null) {
+		gebi('subreddits').innerHTML = 'error: ' + error;
+		return;
+	}
+	var subreddits = json['subreddits'];
+	var output = '<div class="subreddits_header">monitoring ' + subreddits.length + ' subreddits</div>';
+	for (var i in subreddits) {
+		output += '<span class="subreddit" style="display: flex; padding-right: 15px; line-height: 200%;">';
+		output += '<a class="subreddit" href="http://www.reddit.com/r/' + subreddits[i] + '" target="_new">' + subreddits[i] + '</a></span> ';
+	}
+	gebi('subreddits').innerHTML = output;
+}
+
 function add_subreddit() {
 	var subreddit = gebi('subreddit').value;
 	sendAddSubredditRequest('add_sub.cgi?subreddit=' + subreddit);
@@ -305,11 +333,13 @@ function handleAddSubredditResponse(responseText) {
 
 function sendStatusRequest() {
 	var request = makeHttpObject();
+	/*
 	gebi("db_images").innerHTML     = '...';
 	gebi("db_posts").innerHTML      = '...';
 	gebi("db_comments").innerHTML   = '...';
 	gebi("db_albums").innerHTML     = '...';
 	gebi("db_subreddits").innerHTML = '...';
+	*/
 	request.open("GET", 'status.cgi', true);
 	request.send(null);
 	request.onreadystatechange = function() {
@@ -411,14 +441,71 @@ function over18() {
 	}
 }
 
+function menu_database_click() {
+	var menu = gebi("database_menu");
+	if (menu.className == 'menuActive') {
+		collapseMenu();
+		return;
+	}
+	if (!menu.alreadyRequested) {
+		sendStatusRequest();
+	}
+	gebi('database_dropdown').style.display  = 'table-cell';
+	gebi('subreddit_dropdown').style.display = 'none';
+	gebi('about_dropdown').style.display     = 'none';
+	menu.className  = 'menuActive';
+	gebi('subreddit_menu').className = 'menu';
+	gebi('about_menu').className     = 'menu';
+	// Disable further requests for updates after 1
+	menu.alreadyRequested = true;
+}
+function menu_subreddit_click() {
+	var menu = gebi("subreddit_menu");
+	if (menu.className == 'menuActive') {
+		collapseMenu();
+		return;
+	}
+	if (!menu.alreadyRequested) {
+		get_subreddits();
+	}
+	gebi('database_dropdown').style.display  = 'none';
+	gebi('subreddit_dropdown').style.display = 'table-cell';
+	gebi('about_dropdown').style.display     = 'none';
+	gebi('database_menu').className  = 'menu';
+	menu.className = 'menuActive';
+	gebi('about_menu').className     = 'menu';
+	// Disable further updates
+	menu.alreadyRequested = true;
+}
+function menu_about_click() {
+	if (gebi('about_menu').className == 'menuActive') {
+		collapseMenu();
+		return;
+	}
+	gebi('database_dropdown').style.display  = 'none';
+	gebi('subreddit_dropdown').style.display = 'none';
+	gebi('about_dropdown').style.display     = 'table-cell';
+	gebi('database_menu').className  = 'menu';
+	gebi('subreddit_menu').className = 'menu';
+	gebi('about_menu').className     = 'menuActive';
+}
+function collapseMenu() {
+	gebi('database_dropdown').style.display  = 'none';
+	gebi('subreddit_dropdown').style.display = 'none';
+	gebi('about_dropdown').style.display     = 'none';
+	gebi('database_menu').className  = 'menu';
+	gebi('subreddit_menu').className = 'menu';
+	gebi('about_menu').className     = 'menu';
+}
+	
+
 // Function to run after window has loaded
 function init() {
 	over18();
 	//setTheme();
-	//sendStatusRequest();
 	if (!checkURL()) {
 		// Not loading an image; randomly pick a url to display
-		var urls = ['http://i.imgur.com/IFdWn.jpg', 'http://i.imgur.com/3qrBM.jpg', 'http://i.minus.com/ibu7TXSVaN73Nn.gif', 'http://i.imgur.com/O1IXj.jpg', 'http://i.imgur.com/UHdXc.jpg', 'http://i.imgur.com/QNj8w.jpg', 'http://i.imgur.com/xA1wr.jpg', 'http://i.imgur.com/54SAK.jpg', 'http://i.imgur.com/EpMv9.jpg', 'http://i.imgur.com/9VAfG.jpg', 'http://i.imgur.com/OaSfh.gif', 'http://i.imgur.com/iHjXO.jpg', 'http://i.imgur.com/IDLu8.jpg'];
+		var urls = ['http://i.imgur.com/IFdWn.jpg', 'http://i.imgur.com/3qrBM.jpg', 'http://i.minus.com/ibu7TXSVaN73Nn.gif', 'http://i.imgur.com/O1IXj.jpg', 'http://i.imgur.com/UHdXc.jpg', 'http://i.imgur.com/QNj8w.jpg', 'http://i.imgur.com/xA1wr.jpg', 'http://i.imgur.com/54SAK.jpg', 'http://i.imgur.com/EpMv9.jpg', 'http://i.imgur.com/9VAfG.jpg', 'http://i.imgur.com/OaSfh.gif', 'http://i.imgur.com/iHjXO.jpg', 'http://i.imgur.com/IDLu8.jpg', 'http://i.imgur.com/ReKZC.jpg', 'http://i.imgur.com/mhvSa.jpg'];
 		gebi('url').value = urls[Math.floor(Math.random() * urls.length)];
 	}
 }

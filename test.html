@@ -119,27 +119,17 @@
 		<div id="subreddit_status"></div>
 		-->
 		
-		<table id="menu_table" class="menu"><tr>
-			<td class="menu">
-				<input 	class="menu_button" 
-					type="button" 
-					onclick=""
-					value="database statistics"/>
-			</td><td class="menu">
-				<input 	class="menu_button" 
-					type="button" 
-					onclick=""
-					value="subreddits"/>
-			</td><td class="menu">
-				<input 	class="menu_button" 
-					type="button" 
-					onclick=""
-					value="about"/>
+		<table id="menu_table" class="menu"><tr class="menu">
+			<td class="menu" id="database_menu" onclick="menu_database_click();">
+				database statistics
+			</td><td class="menu" id="subreddit_menu" onclick="menu_subreddit_click();">
+				subreddits
+			</td><td class="menu" id="about_menu" onclick="menu_about_click();">
+				about
 			</td>
 		</tr><tr>
-			<td colspan="3">
-				<div id="database_dropdown" class="database_dropdown">
-				<table style="width: 100%;">
+			<td colspan="3" id="database_dropdown" class="menu_dropdown">
+				<table style="width: 60%; padding-left: 20px; padding-right: 20px; margin-left: auto; margin-right: auto;">
 					<tr>
 						<td align="right">images:</td>
 						<td id="db_images" class="db_status">...,...</td>
@@ -157,18 +147,36 @@
 						<span id="db_subreddits" class="db_status">...</span></td>
 					</tr>
 				</table>
+			</td><td colspan="3" id="subreddit_dropdown" class="menu_dropdown">
+				<div id="subreddits"></div>
+			</td><td colspan="3" id="about_dropdown" class="menu_dropdown">
+				<center style="padding: 10px;">
+				<table style="border-collapse: collapse; cellpadding: 5px;">
+					<tr><td class="about_left">who?</td>
+						<td>created by <a class="footer" href="http://reddit.com/user/4_pr0n">4_pr0n</a></td></tr>
+					<tr class="border_spacer"><td class="about_left">what?</td>
+						<td>shows reddit posts/comments/albums that contain the image</td></tr>
+					<tr class="border_spacer"><td class="about_left">when?</td>
+						<td>constantly scrapes images from day-old posts</td></tr>
+					<tr class="border_spacer"><td class="about_left">where?</td>
+						<td>from the weekly top 1,000 posts in the listed subreddits</td></tr>
+					<tr class="border_spacer"><td class="about_left">why?</td>
+						<td>the greater good</td></tr>
+					<tr><td class="about_left">how?</td><td> image comparison & python</td></tr>
+				</table>
+				</center>
 			</td>
-		</tr></table>
-		</div>
-		</td></tr><tr><td>
-		</td></tr></table>
-		<p class="footer">questions or comments? contact <u><a 
+		</tr></table> <!-- end of 'menu' table -->
+		
+		</td></tr></table> <!-- end of 'page' table -->
+		
+		<p class="footer">suggestions or comments? contact <a 
 			class="footer"
 			href="http://www.reddit.com/message/compose/?
 to=4_pr0n&
 subject=about%20i.rarchives.com&
-message=I%20have%20a%20%3Ccomplaint%2C%20comment%2C%20suggestion%3A"
-			>4_pr0n</a></u> via reddit
+message=I%20have%20a%20%3Ccomplaint%2C%20comment%2C%20suggestion%3E%3A"
+			>4_pr0n</a> via reddit
 		</p>
 	</body>
 </html>
