@@ -59,6 +59,12 @@ function userKeyDown(evt) {
 function sendSearchRequest(query) {
 	var request = makeHttpObject();
 	statusbar('<img src="images/spinner_dark.gif"/> searching...');
+	setTimeout( function() {
+		var status = gebi("status");
+		if (status.innerHTML.indexOf('searching...') >= 0) {
+			status.innerHTML += '<br>the site is currently lagging. you can keep waiting or try again later.';
+		}  
+	}, 5000);
 	gebi("output").innerHTML = '';
 	output_posts('');
 	output_comments('');
@@ -94,14 +100,31 @@ function handleSearchResponse(responseText) {
 	if (resp.posts.length == 0 && resp.comments.length == 0) {
 		// No results, show alternatives
 		statusbar('<span class="search_count_empty">no results</span>');
-		var url = gebi('url').value; //.replace(/</g, '').replace(/>/g, '');
-		var out = '';
-		out += '<ul>';
-		out += '<li> <a class="external_link" href="http://images.google.com/searchbyimage?image_url=' + url + '">search on google images</a></li>';
-		out += '<li> <a class="external_link" href="http://www.tineye.com/search?pluginver=bookmark_1.0&url=' + url + '">search on tineye</a></li>';
-		out += '<li> <a class="external_link" href="http://www.karmadecay.com/' + url.replace(/http:\/\//, '') + '">search on karmadecay</a></li>';
-		out += '</ul>';
-		output(out);
+		
+		var url = gebi('url').value.replace(/</g, '').replace(/>/g, '');
+		if (document.location.href.indexOf('?user=') == -1) {
+			var out = '';
+			out += '<ul>';
+			out += '<li> <a class="external_link" ';
+			out +=         'href="data:text/html;charset=utf-8, ';
+			out +=                '<html><head><meta http-equiv=\'REFRESH\' content=\'0;url=';
+			out +=         	      'http://images.google.com/searchbyimage?image_url=' + url + '\'></head></html>" ';
+			out +=         'rel="noreferrer">search on google images</a></li>';
+			out += '<li> <a class="external_link" ';
+			out +=         'href="data:text/html;charset=utf-8, ';
+			out +=                '<html><head><meta http-equiv=\'REFRESH\' content=\'0;url=';
+			out +=                'http://www.tineye.com/search?pluginver=bookmark_1.0&url=' + url + '\'></head></html>" ';
+			out +=         'rel="noreferrer">search on tineye</a></li>';
+			out += '<li> <a class="external_link" ';
+			out +=         'href="data:text/html;charset=utf-8, ';
+			out +=                '<html><head><meta http-equiv=\'REFRESH\' content=\'0;url=';
+			out +=                'http://www.karmadecay.com/' + url.replace(/http:\/\//, '') + '\'></head></html>" ';
+			out +=         'rel="noreferrer">search on karmadecay</a></li>';
+			out += '</ul>';
+			output(out);
+		} else {
+			output('<br>');
+		}
 		return;
 	}
 	statusbar('');
@@ -109,14 +132,14 @@ function handleSearchResponse(responseText) {
 	// POSTS
 	if (resp.posts.length > 0) {
 		result = [];
-		result.push('<table border="1" style="border-style: solid; padding: 5px">');
+		result.push('<table border="1" style="border-style: solid; padding: 5px; width: 100%">');
 		var s = (resp.posts.length == 1) ? '' : 's';
 		result.push('<tr><td colspan="2" class="search_result_title">' + resp.posts.length + ' post' + s + '</td></tr>');
 		for (var i in resp['posts']) {
 			var post = resp['posts'][i];
 			result.push(display_post(post));
 		}
-		result.push('</table><br><br>');
+		result.push('</table>');
 		output_posts(result.join(''));
 	}
 	
@@ -133,6 +156,26 @@ function handleSearchResponse(responseText) {
 		result.push('</table>');
 		output_comments(result.join(''));
 	}
+	var url = gebi('url').value.replace(/</g, '').replace(/>/g, '');
+	var out = '';
+	out += '<ul>';
+	out += '<li> <a class="external_link" ';
+	out +=         'href="data:text/html;charset=utf-8, ';
+	out +=                '<html><head><meta http-equiv=\'REFRESH\' content=\'0;url=';
+	out +=         	      'http://images.google.com/searchbyimage?image_url=' + url + '\'></head></html>" ';
+	out +=         'rel="noreferrer">search on google images</a></li>';
+	out += '<li> <a class="external_link" ';
+	out +=         'href="data:text/html;charset=utf-8, ';
+	out +=                '<html><head><meta http-equiv=\'REFRESH\' content=\'0;url=';
+	out +=                'http://www.tineye.com/search?pluginver=bookmark_1.0&url=' + url + '\'></head></html>" ';
+	out +=         'rel="noreferrer">search on tineye</a></li>';
+	out += '<li> <a class="external_link" ';
+	out +=         'href="data:text/html;charset=utf-8, ';
+	out +=                '<html><head><meta http-equiv=\'REFRESH\' content=\'0;url=';
+	out +=                'http://www.karmadecay.com/' + url.replace(/http:\/\//, '') + '\'></head></html>" ';
+	out +=         'rel="noreferrer">search on karmadecay</a></li>';
+	out += '</ul>';
+	output(out);
 }
 
 function display_post(post) {
@@ -141,10 +184,11 @@ function display_post(post) {
 	var title = post.title; var permalink = post.permalink; var created = post.created; 
 	var author = post.author; var thumb = post.thumb; var subreddit = post.subreddit; 
 	var comments = post.comments; var width = post.width; height = post.height; size = post.size;
+	var imageurl = post.imageurl;
 	var date = new Date(0);
 	date.setUTCSeconds(created);
 	txt = '<tr><td style="border-width: 0px;">';
-	txt += '<table class="invisible" style="display: table; width: 100%;">';
+	txt += '<table class="invisible" style="display: table; width: 100%; margin-left: auto;">';
 	txt +=   '<tr>';
 	txt +=     '<td class="result_arrow" style="vertical-align: bottom; padding-bottom: 3px;">';
 	txt +=       '<img src="images/up.png" class="vote"></td>';
@@ -156,19 +200,30 @@ function display_post(post) {
 	txt +=     '<td class="result_arrow" style="vertical-align: top;"><img src="images/down.png" class="vote"></td>';
 	txt +=   '</tr>';
 	txt += '</table>';
-	txt += '</td><td valign="top" style="border: 0px; padding-top: 0px;">';
+	txt += '</td><td valign="top" style="border: 0px; padding-top: 0px; max-width: 600px;">';
 	txt += '<table class="invisible">';
-	txt +=   '<tr><td><a class="result_link" href="http://reddit.com' + permalink + '">' + title + '</a></td></tr>';
+	txt +=   '<tr><td><a class="result_link" href="http://reddit.com' + permalink + '">' + title + '</a>';
+	if (url.indexOf('imgur.com/a/') >= 0) {
+		txt += '<span class="post_domain">&nbsp;(album)</span>';
+	}
+	txt += '</td></tr>';
 	txt +=   '<tr><td class="result_info"><span class="result_date" style="padding-right: 5px;">';
-	txt +=     '(<span style="color: #ff4500; padding: 1px;"><b>' + ups + '</b></span>|<span style="color: #00f; padding: 1px;"><b>' + downs + '</b></span>)</span> ';
+	txt +=     '(<span class="post_ups">' + ups + '</span>|<span class="post_downs">' + downs + '</span>)</span> ';
 	txt +=     ' submitted <span class="result_date" title="' + date.toUTCString() + '">' + get_time(created) + '</span>';
-	txt +=     ' by <a href="/?user=' + author + '">' + author + '</a>';
-	txt +=     ' to <a href="http://www.reddit.com/r/' + subreddit + '">' + subreddit + '</a>';
+	txt +=     ' by <a class="post_author" href="/?user=' + author + '">' + author + '</a>';
+	txt +=     ' to <a class="post_author" href="http://www.reddit.com/r/' + subreddit + '">' + subreddit + '</a>';
 	txt +=   '</td><tr>'
 	txt +=   '<tr><td class="result_info">';
-	txt +=     '<a class="result_comment_link" href="http://www.reddit.com' + permalink + '">' + comments + ' comments</a> ';
+	txt +=     '<a class="result_comment_link" href="http://www.reddit.com' + permalink + '">';
+	if (comments == 0) { txt += 'comment';
+	} else if (comments == 1) {txt += '1 comment';
+	} else { txt += comments + ' comments'; }
+	txt += '</a> ';
 	if (width != '' && height != '' && size != '') {
-		txt +=     width + 'x' + height + ' (' + bytes_to_readable(size) + ')';
+		txt += '<a class="result_image_link" href="' + imageurl + '">';
+		txt += '(' + width + 'x' + height + '&nbsp;' + bytes_to_readable(size) + ')';
+		txt += '</a>';
+		//txt += ' <span class="post_domain">(' + width + 'x' + height + '&nbsp;' + bytes_to_readable(size) + ')</span>';
 	}
 	txt +=   '</td></tr>'
 	txt += '</table>';
@@ -181,10 +236,15 @@ function display_comment(comment) {
 	var score = comment.ups - comment.downs;
 	var hexid = comment.hexid; var postid = comment.postid;
 	var created = comment.created; var author = comment.author;
-	var body = comment.body;
+	var body = comment.body, imageurl = comment.imageurl;
 	var width = comment.width; height = comment.height; size = comment.size;
 	var date = new Date(0);
 	date.setUTCSeconds(created);
+	if (comment.url != null) {
+		body = markdown_to_html(body, comment.url);
+	} else {
+		body = markdown_to_html(body, comment.imageurl);
+	}
 	txt = '<tr><td valign="top" style="border-width: 0px;">';
 	txt += '<table class="invisible" valign="top" style="display: table; width: 100%; vertical-align: top;">';
 	txt +=   '<tr>';
@@ -196,24 +256,29 @@ function display_comment(comment) {
 	txt += '</td><td valign="top" style="border: 0px; padding-top: 0px;">';
 	txt += '<table class="invisible">';
 	txt +=   '<tr><td class="result_comment_info">';
-	txt +=     '<a style="padding-right: 5px;" href="/?user=' + author + '"><b>' + author + '</b></a> ';
-	txt +=     score + ' points ';
-	txt +=     '<span class="result_date" title="' + date.toUTCString() + '">' + get_time(created) + '';
-	txt +=     ' (<span style="color: #ff4500; padding: 1px;"><b>' + comment.ups + '</b></span>|<span style="color: #00f; padding: 1px;"><b>' + comment.downs + '</b></span>)</span>';
+	txt +=     '<a class="comment_author" href="/?user=' + author + '">' + author + '</a> ';
+	txt +=     score + ' point';
+	if (score != 1) { txt += 's'; }
+	txt +=     ' <span class="result_date" title="' + date.toUTCString() + '">' + get_time(created) + '';
+	txt +=     ' (<span class="comment_ups">' + comment.ups + '</span>|<span class="comment_downs">' + comment.downs + '</span>)</span>';
 	txt +=   '</td></tr>';
 	txt +=   '<tr><td class="result_comment_body">';
-	txt +=     markdown_to_html(body);
+	txt +=     body;
 	txt +=   '</td><tr>'
 	txt +=   '<tr><td class="result_info">';
 	txt +=     '<a class="result_comment_link" href="http://reddit.com/comments/' + postid + '/_/' + hexid + '">permalink</a> ';
-	txt +=     width + 'x' + height + ' (' + bytes_to_readable(size) + ')';
+	if (width != 0 && height != 0 && size != 0) {
+		txt += '<a class="result_image_link" href="' + imageurl + '">';
+		txt += '(' + width + 'x' + height + '&nbsp;' + bytes_to_readable(size) + ')';
+		txt += '</a>';
+	}
 	txt +=   '</td></tr>'
 	txt += '</table>';
 	txt +='</td></tr><tr><td style="font-size: 0.5em; visibility: hidden;">&nbsp;</td></tr>';
 	return txt;
 }
 
-function markdown_to_html(text) {
+function markdown_to_html(text, relevant_url) {
 	var h = text;
 	h = h.replace(/\n /g, '\n').replace(/ \n/g, '\n').replace(/\n\n/g, '\n').replace(/\n/g, '<br>')
 	var result = '';
@@ -226,7 +291,11 @@ function markdown_to_html(text) {
 			j++;
 		}
 		url = h.substring(i, j);
-		result += '<a href="' + url + '">' + url + '</a>';
+		if (url == relevant_url) {
+			result += '<a class="relevant_url" href="' + url + '">' + url + '</a>';
+		} else {
+			result += '<a href="' + url + '">' + url + '</a>';
+		}
 		previous = j;
 		i = h.indexOf("http://", previous);
 	}
@@ -294,52 +363,16 @@ function handleGetSubredditsResponse(responseText) {
 		return;
 	}
 	var subreddits = json['subreddits'];
-	var output = '<div class="subreddits_header">monitoring ' + subreddits.length + ' subreddits</div>';
+	var output = '<div class="subreddits_header">monitoring ' + subreddits.length + ' subreddits</div><br>';
 	for (var i in subreddits) {
-		output += '<span class="subreddit" style="display: flex; padding-right: 15px; line-height: 200%;">';
+		output += '<span class="subreddit" style="display: inline; padding-right: 15px; line-height: 200%;">';
 		output += '<a class="subreddit" href="http://www.reddit.com/r/' + subreddits[i] + '" target="_new">' + subreddits[i] + '</a></span> ';
 	}
 	gebi('subreddits').innerHTML = output;
 }
 
-function add_subreddit() {
-	var subreddit = gebi('subreddit').value;
-	sendAddSubredditRequest('add_sub.cgi?subreddit=' + subreddit);
-}
-
-function sendAddSubredditRequest(query) {
-	var request = makeHttpObject();
-	gebi("subreddit_status").innerHTML = 'adding...';
-	request.open("GET", query, true);
-	request.send(null);
-	request.onreadystatechange = function() {
-		if (request.readyState == 4) { 
-			if (request.status == 200) {
-				// success
-				handleAddSubredditResponse(request.responseText);
-			} else {
-				// error
-				gebi('subreddit_status').innerHTML = "error! async request status code: " + request.status;
-			}
-		}
-	}
-}
-
-function handleAddSubredditResponse(responseText) {
-	//output("response from server: " + responseText);
-	var resp = JSON.parse(responseText);
-	gebi('subreddit_status').innerHTML = resp['result'];
-}
-
 function sendStatusRequest() {
 	var request = makeHttpObject();
-	/*
-	gebi("db_images").innerHTML     = '...';
-	gebi("db_posts").innerHTML      = '...';
-	gebi("db_comments").innerHTML   = '...';
-	gebi("db_albums").innerHTML     = '...';
-	gebi("db_subreddits").innerHTML = '...';
-	*/
 	request.open("GET", 'status.cgi', true);
 	request.send(null);
 	request.onreadystatechange = function() {
@@ -363,6 +396,7 @@ function handleStatusResponse(responseText) {
 	gebi("db_subreddits").innerHTML = number_commas(resp['subreddits']);
 }
 
+// Add commas to the thousands places in a number
 function number_commas(x) {
 	return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
@@ -502,10 +536,10 @@ function collapseMenu() {
 // Function to run after window has loaded
 function init() {
 	over18();
-	//setTheme();
+	setTheme();
 	if (!checkURL()) {
 		// Not loading an image; randomly pick a url to display
-		var urls = ['http://i.imgur.com/IFdWn.jpg', 'http://i.imgur.com/3qrBM.jpg', 'http://i.minus.com/ibu7TXSVaN73Nn.gif', 'http://i.imgur.com/O1IXj.jpg', 'http://i.imgur.com/UHdXc.jpg', 'http://i.imgur.com/QNj8w.jpg', 'http://i.imgur.com/xA1wr.jpg', 'http://i.imgur.com/54SAK.jpg', 'http://i.imgur.com/EpMv9.jpg', 'http://i.imgur.com/9VAfG.jpg', 'http://i.imgur.com/OaSfh.gif', 'http://i.imgur.com/iHjXO.jpg', 'http://i.imgur.com/IDLu8.jpg', 'http://i.imgur.com/ReKZC.jpg', 'http://i.imgur.com/mhvSa.jpg'];
+		var urls = ['http://i.imgur.com/IFdWn.jpg', 'http://i.imgur.com/3qrBM.jpg', 'http://i.minus.com/ibu7TXSVaN73Nn.gif', 'http://i.imgur.com/O1IXj.jpg', 'http://i.imgur.com/QNj8w.jpg', 'http://i.imgur.com/xA1wr.jpg', 'http://i.imgur.com/54SAK.jpg', 'http://i.imgur.com/EpMv9.jpg', 'http://i.imgur.com/9VAfG.jpg', 'http://i.imgur.com/OaSfh.gif', 'http://i.imgur.com/iHjXO.jpg', 'http://i.imgur.com/IDLu8.jpg', 'http://i.imgur.com/ReKZC.jpg', 'http://i.imgur.com/mhvSa.jpg', 'http://i.imgur.com/qfzpA.jpg'];
 		gebi('url').value = urls[Math.floor(Math.random() * urls.length)];
 	}
 }

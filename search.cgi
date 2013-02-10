@@ -46,7 +46,7 @@ if import_failed:
 # SEARCH BY USER
 def get_user(user, start=0, count=50):
 	user = user.replace('\'', '').replace('"', '').replace('\\', '')
-	ps = db.select('*', 'Posts', 'author like "%s" order by ups DESC' % user)
+	ps = db.select('*', 'Posts', 'author like "%s" order by ups DESC LIMIT %d' % (user, count))
 	#ps = sorted(ps, reverse=True, key=lambda tup: tup[9])
 	posts = []
 	index = 0
@@ -75,9 +75,25 @@ def get_user(user, start=0, count=50):
 		p['is_self'] = is_self
 		p['over_18'] = over_18
 		posts.append(p)
+	comments = []
+	cs = db.select('*', 'Comments', 'author like "%s" ORDER BY ups LIMIT %d' % (user, count))
+	for (id, postid, hexid, author, body, ups, downs, created) in cs:
+		comment = {}
+		comment['width'] = 0
+		comment['height'] = 0
+		comment['size'] = 0
+		comment['body'] = body
+		comment['author'] = author
+		comment['hexid'] = hexid
+		comment['ups'] = ups
+		comment['downs'] = downs
+		comment['postid'] = postid
+		comment['created'] = created
+		comment['thumb'] = ''
+		comments.append(comment)
 	result = {}
 	result['posts'] = posts;
-	result['comments'] = [];
+	result['comments'] = comments;
 	print json.dumps(result)
 	print '\n\n'
 
@@ -145,64 +161,71 @@ def start():
 	posts    = []
 	comments = []
 	# Search for image by hash 'hash'
-	images = db.select('*', 'Images', 'hashid in (select id from Hashes where hash = "%s")' % (hash))
+	images = db.select('*', 'Images', 'hashid in (select id from Hashes where hash = "%s") group by postid, commentid' % (hash))
 	for (urlid, hashid, albumid, postid, commentid) in images:
 		# TODO Lookup image's dimensions/sizes for each result
-		(width, height, size) = db.select('width, height, bytes', 'ImageURLs', 'id = %d' % (urlid))[0]
+		(imageurl, width, height, size) = db.select('url, width, height, bytes', 'ImageURLs', 'id = %d' % (urlid))[0]
+		item = {}
 		if commentid != 0:
 			# comment
 			(id, postid, hexid, author, body, ups, downs, created) = \
 					db.select('*', 'Comments', 'id = %d' % (commentid))[0]
 			post_hexid = db.select('hexid', 'Posts', 'id = %d' % (postid))[0][0]
-			comment = {}
-			comment['width']   = width
-			comment['height']  = height
-			comment['size']    = size
+			item = {}
+			item['imageurl']= imageurl
+			item['width']   = width
+			item['height']  = height
+			item['size']    = size
 			if path.exists('thumbs/%d.jpg' % urlid):
-				comment['thumb'] = 'http://i.rarchives.com/thumbs/%d.jpg' % urlid
+				item['thumb'] = 'http://i.rarchives.com/thumbs/%d.jpg' % urlid
 			else:
 				web.download('http://i.derv.us/thumbs/%d.jpg' % urlid, 'thumbs/%d.jpg' % urlid)
-				comment['thumb'] = 'http://i.rarchives.com/thumbs/%d.jpg' % urlid
-				# comment['thumb'] = 'http://i.derv.us/thumbs/%d.jpg' % urlid
-			comment['hexid']   = hexid
-			comment['postid']  = post_hexid
-			comment['author']  = author
-			comment['body']    = body
-			comment['ups']     = ups
-			comment['downs']   = downs
-			comment['created'] = created
-			comments.append(comment)
+				item['thumb'] = 'http://i.rarchives.com/thumbs/%d.jpg' % urlid
+				# item['thumb'] = 'http://i.derv.us/thumbs/%d.jpg' % urlid
+			item['hexid']   = hexid
+			item['postid']  = post_hexid
+			item['author']  = author
+			item['body']    = body
+			item['ups']     = ups
+			item['downs']   = downs
+			item['created'] = created
+			comments.append(item)
 		else:
 			# post
 			(id, hexid, title, posturl, text, author, permalink, subreddit, \
 			 num_comments, ups, downs, score, created, is_self, over_18) = \
 					db.select('*', 'Posts', 'id = %d' % (postid))[0]
-			post = {}
-			post['width']     = width
-			post['height']    = height
-			post['size']      = size
+			item = {}
+			item['width']     = width
+			item['height']    = height
+			item['size']      = size
 			if path.exists('thumbs/%d.jpg' % urlid):
-				post['thumb'] = 'http://i.rarchives.com/thumbs/%d.jpg' % urlid
+				item['thumb'] = 'http://i.rarchives.com/thumbs/%d.jpg' % urlid
 			else:
 				web.download('http://i.derv.us/thumbs/%d.jpg' % urlid, 'thumbs/%d.jpg' % urlid)
-				post['thumb'] = 'http://i.rarchives.com/thumbs/%d.jpg' % urlid
+				item['thumb'] = 'http://i.rarchives.com/thumbs/%d.jpg' % urlid
 				#post['thumb'] = 'http://i.derv.us/thumbs/%d.jpg' % urlid
-			post['hexid']     = hexid
-			post['title']     = title
-			post['url']       = posturl
-			post['text']      = text
-			post['author']    = author
-			post['permalink'] = permalink
-			post['subreddit'] = subreddit
-			post['comments']  = num_comments
-			post['ups']       = ups
-			post['downs']     = downs
-			post['score']     = score
-			post['created']   = created
-			post['is_self']   = int(is_self)
-			post['over_18']   = int(over_18)
-			posts.append(post)
+			item['hexid']     = hexid
+			item['title']     = title
+			item['url']       = posturl
+			item['imageurl']  = imageurl
+			item['text']      = text
+			item['author']    = author
+			item['permalink'] = permalink
+			item['subreddit'] = subreddit
+			item['comments']  = num_comments
+			item['ups']       = ups
+			item['downs']     = downs
+			item['score']     = score
+			item['created']   = created
+			item['is_self']   = int(is_self)
+			item['over_18']   = int(over_18)
+			posts.append(item)
 			if len(posts) >= 40: break
+		
+		if albumid != 0:
+			u = db.select("url", "Albums", "id = %d" % albumid)[0][0]
+			item['url'] = u
 	
 	result = {}
 	posts = sorted(posts, reverse=True, key=lambda tup: tup['comments'])

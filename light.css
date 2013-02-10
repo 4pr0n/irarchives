@@ -13,8 +13,8 @@ div.top_bar {
 div.div_bar {
 	display: none;
 	font-size: 0.8em; 
-	color: #ccc; 
-	background-color: #000; 
+	color: #222; 
+	background-color: #fff; 
 	padding: 2px;
 	padding-left: 10px;
 	z-index: 5;
@@ -22,8 +22,8 @@ div.div_bar {
 
 div.div_bar_warning {
 	font-size: 1.2em; 
-	color: #fff; 
-	background-color: #f00; 
+	color: #f00; 
+	background-color: #fff; 
 	text-align: center;
 	padding: 3px;
 	z-index: 5;
@@ -32,35 +32,26 @@ div.div_bar_warning {
 a.bookmarklet {
 	text-decoration: none;
 	font-weight: bold;
-	color: #fff;
-	background-color: #000;
-	border: solid 1px #ccc;
+	color: #222;
+	background-color: #fff;
+	border: solid 1px #222;
 	border-radius: 5px;
 	padding: 3px;
 	padding-top: 1px;
 	padding-bottom: 0px;
 }
-a.bookmarklet:visited {
-	color: #fff;
-	background-color: #000;
-}
 a.bookmarklet:hover {
-	color: #fff;
 	background-color: #f00;
-}
-a.bookmarklet:hover:visited {
 	color: #fff;
-	background-color: #f00;
 }
-
 
 a.theme {
-        color: #ccc;
-        font-weight: bold;
+	color: #222;
+	font-weight: bold;
 }
 a.theme:hover {
-        color: #aaa;
-        text-decoration: underline;
+	color: #000;
+	text-decoration: underline;
 }
 
 table.page {
@@ -72,8 +63,8 @@ table.page {
 
 body {
 	padding: 0px;
-	background-color: #030303;
-	color: #ccc;
+	background-color: #fefefe;
+	color: #222;
 	font-family: Helvetica, Arial, Verdana; /*Consolas, Verdana, monospace;*/
 	font-size: 1.2em;
 }
@@ -82,15 +73,15 @@ a {
 	text-decoration: none;
 	color: #00f;
 }
-a:visited { color: #70d; }
-a:hover   { color: #66f; }
+a:visited { color: #606; }
+a:hover   { color: #505; }
 
 a.no_color {
 	text-decoration: underline;
-	color: #ccc;
+	color: #fff;
 }
-a.no_color:hover   { color: #fff; }
-a.no_color:visited { color: #aaa; }
+a.no_color:hover   { color: #ddd; }
+a.no_color:visited { color: #ddd; }
 
 a.title_red {
 	text-decoration: none;
@@ -107,6 +98,7 @@ a.title_red {
 	             -4px  0px 10px rgba(255, 0, 0, 0.3),
 	              0px -4px 10px rgba(255, 0, 0, 0.3);
 }
+
 span.title_red {
 	font-size: 2.8em;
 	font-weight: bold;
@@ -117,10 +109,9 @@ span.title_red {
 
 a.title_white {
 	text-decoration: none;
-	color: #ccc;
+	color: #222;
 }
 a.title_white:hover {
-	color: #fff;
 	text-decoration: none;
 }
 span.bracket {
@@ -140,7 +131,6 @@ span.title_white {
 }
 
 table {
-	border-color:   grey;
 	border-width:   0px;
         padding:        10px;
         border-spacing: 10px;
@@ -172,31 +162,32 @@ td.search_url {
 
 input.search_text {
 	font-size: 1.2em;
-	background-color: #444;
-	color: #eee;
+	background-color: #fff;
+	color: #222;
 	cursor: default;
-	border: 0px;
+	border: solid 1px #222;
 	border-radius: 5px;
 	width: 100%;
 	padding: 4px;
+	letter-spacing: -0.05em;
 	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;    
 }
 input.search_text:focus {
-	color: #f00;
-	background-color: #303030;
+	color: #222;
+	background-color: #eee;
 }
 input.search_text:hover {
-	color: #f00;
-	background-color: #303030;
+	color: #222;
+	background-color: #eee;
 }
 
 input.search_button {
 	font-size: 1.5em;
 	font-weight: bold;
 	background-color: #b00;
-	color: #fcfcfc;
-	border: none;
+	color: #fff;
+	border: solid 1px #222;
 	border-radius: 5px;
 }
 input.search_button:hover {
@@ -219,24 +210,19 @@ td.search_status_result {
 }
 
 .search_count {
-	color: #f00;
+	color: #222;
 	font-weight: bold;
 	font-size: 1.5em;
 }
 
 .search_count_empty {
-	color: #f00;
+	color: #222;
 	font-weight: bold;
 	font-size: 1.5em;
 }
 
-a.external_link {
-	font-size: 1.1em;
-	font-weight: bold;
-}
-
 td.search_result_title {
-	color: #f00;
+	color: #222;
 	font-weight: bold;
 	font-size: 1.5em;
 	text-align: center;
@@ -272,7 +258,7 @@ span.result_score {
 	font-size: 1.2em;
 	font-weight: bold;
 	vertical-align: middle;
-	color: #ff4500;
+	color: #ee3400;
 }
 
 img.vote {
@@ -281,79 +267,74 @@ img.vote {
 	display: inline-block;
 }
 
-img.result_thumbnail{ 
+img.result_thumbnail {
 	
 }
 
 a.result_link {
 	font-size: 1.5em;
+	font-weight: none;
 }
 
 span.post_domain {
-        color: #666;
-	padding-left: 5px;
+	color: #666;
 }
 a.post_author {
-	color: #00f;
+        color: #20b;
 }
 span.post_ups {
-	color: #ff4500;
-	padding: 1px;
+        color: #ff4500;
+        padding: 1px;
+	padding-right: 2px;
 }
 span.post_downs {
-	color: #00f;
-	padding: 1px;
-}
-a.result_image_link {
-	color: #666;
-	padding: 3px;
-}
-a.result_image_link:hover {
-	color: #999;
+        color: #00f;
+        padding: 1px;
 }
 
 a.comment_author {
-        padding-right: 5px;
-        font-weight: bold;
+	padding-right: 5px;
+	font-weight: bold;
 }
 span.comment_ups {
-	color: #ff4500;
-	padding: 1px;
+        color: #ff4500;
+        padding: 1px;
+	padding-right: 2px;
+	font-weight: bold;
 }
 span.comment_downs {
-	color: #00f;
-	padding: 1px;
-}
-span.relevant_link {
-	color: #f00;
-}
+        color: #00f;
+        padding: 1px;
+	font-weight: bold;
+} 
 a.relevant_url, a.relevant_url:visited {
-	color: #33f;
-	background-color: #333;
-	border: none; /*outset 2px #f00;*/
-	border-radius: 3px;
-	padding: 2px;
-	padding-bottom: 0px;
+        color: #33f;
+        background-color: #bbb;
+        border: none; /*outset 2px #f00;*/
+        border-radius: 3px;
+        padding: 2px;
+        padding-bottom: 0px;
 }
 a.relevant_url:hover {
-	color: #66f;
-	background-color: #666;
+        color: #00f;
+        background-color: #ddd;
 }
 
 td.result_info {
+	color: #666;
 	padding-top:    3px;
 	padding-bottom: 0px;
 	border-spacing: 0px;
 }
 
 span.result_date {
-	color: #cc0;
+	color: #666;
 	padding-top:    0px;
 	padding-bottom: 0px;
 }
 
 a.result_comments {
-	color: #ffffff;
+	color: #222;
 	text-decoration: underline;
 	padding-top:    0px;
 	padding-bottom: 0px;
@@ -369,7 +350,7 @@ td.result_comment_body {
 }
 
 a.result_comment_link {
-	color: #00f;
+	color: #555;
 	font-weight: bold;
 	text-decoration: none;
 	padding-right: 5px;
@@ -379,10 +360,11 @@ a.result_comment_link:hover {
 }
 
 li {
-	color: #ccc;
+	color: #222;
 }
 a.external_link {
-	color: #c00;
+	font-size: 1.1em;
+	color: #000;
 	font-weight: bold;
 }
 a.external_link:hover {
@@ -420,10 +402,16 @@ p.footer {
 a.footer {
 	text-decoration: none;
 	font-weight: bold;
-	color: #ccc;
+	border: solid 1px #222;
+	background-color: #f00;
+	color: #fff;
+	border-radius: 2px;
+	padding: 3px;
+	padding-bottom: 1px;
+	padding-top: 3px;
 }
 a.footer:hover {
-	color: #f00;
+	color: #555;
 	text-decoration: underline;
 }
 
@@ -447,7 +435,8 @@ tr.menu {
 }
 
 td.menu {
-	background-color: #300;
+	background-color: #b00;
+	color: #fff;
 	font-size: 1.3em;
 	font-weight: bold;
 	cursor: pointer;
@@ -465,10 +454,11 @@ td.menu {
 	border-top-right-radius:         10px;
 }
 td.menu:hover {
-	background-color: #400;
+	background-color: #d00;
 }
 td.menuActive {
-	background-color: #700;
+	background-color: #f00;
+	color: #fff;
 	font-size: 1.3em;
 	font-weight: bold;
 	width: 20%;
@@ -485,15 +475,12 @@ td.menuActive {
 	-khtml-border-top-right-radius:  10px;
 	border-top-right-radius:         10px;
 }
-td.menuActive {
-	background-color: #700;
-}
 td.menuActive:hover {
-	background-color: #700;
+	background-color: #f00;
 }
 
 .menu_dropdown {
-	background-color: #700;
+	background-color: #f00;
 	display: none;
 	padding: 0px;
 	text-align: center;
@@ -510,6 +497,7 @@ td.menuActive:hover {
 
 #database_dropdown {
 	display: none;
+	color: #fff;
 }
 
 #subreddit_dropdown {
@@ -517,6 +505,7 @@ td.menuActive:hover {
 	max-width: 900px;
 }
 div.subreddits_header {
+	color: #fff;
 	padding-top: 15px;
 	padding-bottom: 10px;
 	font-size: 1.5em;
@@ -528,17 +517,18 @@ div#subreddits {
 	padding: 10px;
 }
 a.subreddit {
-	color: #ccc;
+	color: #eee;
 }
 a.subreddit:hover {
-	color: #eee;
+	color: #fff;
 	text-decoration: underline;
 }
 a.subreddit:visited {
-	color: #888;
+	color: #aaa;
 }
 
 #about_dropdown {
+	color: #fff;
 	display: none;
 	max-width: 900px;
 	padding-left: 40px;

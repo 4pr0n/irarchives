@@ -140,7 +140,7 @@ def get_image_hash(url, postid=0, comment=None, albumid=0):
 	if not '.' in url: return
 	ext = url.lower()[url.rfind('.') + 1:]
 	
-	if ext in ['jpg', 'jpeg', 'gif', 'png']:
+	if ext.endswith('jpg') or ext.endswith('jpeg') or ext.endswith('gif') or ext.endswith('png'):
 		# If it's a direct link to a image, then we already have the URL
 		url = url.replace('http://imgur.com', 'http://i.imgur.com')
 		pass
@@ -279,14 +279,22 @@ def get_album_hashes(url, postid=0, comment=None):
 	pics = web.between(r, '<img src="http://i.imgur.com/', '"')
 	for pic in pics:
 		u = pic
-		if len(u) == len('dpugoh.jpg'):  u = u[:5] + u[6:]
-		if len(u) == len('dpugoh.jpeg'): u = u[:6] + u[7:]
+		#if len(u) == len('dpugoh.jpg'):  u = u[:5] + u[6:]
+		#if len(u) == len('dpugoh.jpeg'): u = u[:6] + u[7:]
+		i = u.find('.')
+		#if u[i-1] == 'h' and i >= 6: u = u[:i-1] + u[i:]
+		if u[i-1] == 'h':
+			newurl = u[:i-1] + u[i:]
+			m = web.get_meta('http://i.imgur.com/' + newurl)
+			if 'ETag' in m:
+				u = newurl
+			
 		get_image_hash('http://i.imgur.com/' + u, postid=postid, comment=comment, albumid=albumid)
 
 
 def get_images_from_body(body, postid=0, comment=None):
 	""" Parses all http links from body, forwards URL to 'get_image_hash()' """
-	i = 0
+	i = -1
 	while True:
 		i = body.find('http://', i + 1)
 		if i == -1: break

@@ -59,7 +59,7 @@ def to_json():
 				'comments' : get_count('Comments'),
 				'albums'   : get_count('Albums'),
 				'images'   : get_count('Images'),
-				'subreddits' : count_subs_db(),
+				'subreddits' : count_subs_txt(),
 				'subreddits_pending' : count_subs_txt()
 			},
 	}
