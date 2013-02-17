@@ -32,7 +32,7 @@ class DB:
 		"""
 		self.conn = None
 		
-		self.conn = sqlite3.connect(db_file, encoding='utf-8')
+		self.conn = sqlite3.connect(db_file) #TODO CHANGE BACK, encoding='utf-8')
 		self.conn.text_factory = lambda x: unicode(x, "utf-8", "ignore")
 		
 		# Don't create tables if not supplied.

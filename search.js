@@ -17,7 +17,7 @@ function redirect_search() {
 	var url = gebi("url").value;
 	url = url.replace(/[.]/g, '%2E');
 	url = encodeURIComponent(url);
-	document.location.href = 'http://i.rarchives.com/?url=' + url;
+	document.location.href = document.location.pathname + '?url=' + url;
 }
 
 function search_click() {
@@ -28,7 +28,7 @@ function search_click() {
 
 function redirect_user() {
 	var user = gebi("user").value;
-	document.location.href = 'http://i.rarchives.com/?user=' + user;
+	document.location.href = document.location.pathname + '?user=' + user;
 }
 
 function user_click() {
@@ -210,7 +210,7 @@ function display_post(post) {
 	txt +=   '<tr><td class="result_info"><span class="result_date" style="padding-right: 5px;">';
 	txt +=     '(<span class="post_ups">' + ups + '</span>|<span class="post_downs">' + downs + '</span>)</span> ';
 	txt +=     ' submitted <span class="result_date" title="' + date.toUTCString() + '">' + get_time(created) + '</span>';
-	txt +=     ' by <a class="post_author" href="/?user=' + author + '">' + author + '</a>';
+	txt +=     ' by <a class="post_author" href="?user=' + author + '">' + author + '</a>';
 	txt +=     ' to <a class="post_author" href="http://www.reddit.com/r/' + subreddit + '">' + subreddit + '</a>';
 	txt +=   '</td><tr>'
 	txt +=   '<tr><td class="result_info">';
@@ -256,7 +256,7 @@ function display_comment(comment) {
 	txt += '</td><td valign="top" style="border: 0px; padding-top: 0px;">';
 	txt += '<table class="invisible">';
 	txt +=   '<tr><td class="result_comment_info">';
-	txt +=     '<a class="comment_author" href="/?user=' + author + '">' + author + '</a> ';
+	txt +=     '<a class="comment_author" href="?user=' + author + '">' + author + '</a> ';
 	txt +=     score + ' point';
 	if (score != 1) { txt += 's'; }
 	txt +=     ' <span class="result_date" title="' + date.toUTCString() + '">' + get_time(created) + '';
@@ -531,7 +531,10 @@ function collapseMenu() {
 	gebi('subreddit_menu').className = 'menu';
 	gebi('about_menu').className     = 'menu';
 }
-	
+
+function gotoRoot() {
+	window.location = document.location.pathname;
+}
 
 // Function to run after window has loaded
 function init() {

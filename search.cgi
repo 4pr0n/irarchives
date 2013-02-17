@@ -179,9 +179,11 @@ def start():
 			if path.exists('thumbs/%d.jpg' % urlid):
 				item['thumb'] = 'http://i.rarchives.com/thumbs/%d.jpg' % urlid
 			else:
-				web.download('http://i.derv.us/thumbs/%d.jpg' % urlid, 'thumbs/%d.jpg' % urlid)
-				item['thumb'] = 'http://i.rarchives.com/thumbs/%d.jpg' % urlid
-				# item['thumb'] = 'http://i.derv.us/thumbs/%d.jpg' % urlid
+				try:
+					web.download('http://i.derv.us/thumbs/%d.jpg' % urlid, 'thumbs/%d.jpg' % urlid)
+					item['thumb'] = 'http://i.rarchives.com/thumbs/%d.jpg' % urlid
+				except:
+					item['thumb'] = ''
 			item['hexid']   = hexid
 			item['postid']  = post_hexid
 			item['author']  = author
@@ -202,9 +204,12 @@ def start():
 			if path.exists('thumbs/%d.jpg' % urlid):
 				item['thumb'] = 'http://i.rarchives.com/thumbs/%d.jpg' % urlid
 			else:
-				web.download('http://i.derv.us/thumbs/%d.jpg' % urlid, 'thumbs/%d.jpg' % urlid)
-				item['thumb'] = 'http://i.rarchives.com/thumbs/%d.jpg' % urlid
-				#post['thumb'] = 'http://i.derv.us/thumbs/%d.jpg' % urlid
+				try:
+					web.download('http://i.derv.us/thumbs/%d.jpg' % urlid, 'thumbs/%d.jpg' % urlid)
+					item['thumb'] = 'http://i.rarchives.com/thumbs/%d.jpg' % urlid
+				except:
+					# File must not exist here or there.
+					item['thumb'] = ''
 			item['hexid']     = hexid
 			item['title']     = title
 			item['url']       = posturl
