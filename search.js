@@ -63,6 +63,28 @@ function sendSearchRequest(query) {
 		var status = gebi("status");
 		if (status.innerHTML.indexOf('searching...') >= 0) {
 			status.innerHTML += '<br>the site is currently lagging. you can keep waiting or try again later.';
+			var url = gebi('url').value.replace(/</g, '').replace(/>/g, '');
+			var out = '';
+			out += '<div style="text-align: left;">';
+			out += '<ul>';
+			out += '<li> <a class="external_link" ';
+			out +=         'href="data:text/html;charset=utf-8, ';
+			out +=                '<html><head><meta http-equiv=\'REFRESH\' content=\'0;url=';
+			out +=         	      'http://images.google.com/searchbyimage?image_url=' + url + '\'></head></html>" ';
+			out +=         'rel="noreferrer">search on google images</a></li>';
+			out += '<li> <a class="external_link" ';
+			out +=         'href="data:text/html;charset=utf-8, ';
+			out +=                '<html><head><meta http-equiv=\'REFRESH\' content=\'0;url=';
+			out +=                'http://www.tineye.com/search?pluginver=bookmark_1.0&url=' + url + '\'></head></html>" ';
+			out +=         'rel="noreferrer">search on tineye</a></li>';
+			out += '<li> <a class="external_link" ';
+			out +=         'href="data:text/html;charset=utf-8, ';
+			out +=                '<html><head><meta http-equiv=\'REFRESH\' content=\'0;url=';
+			out +=                'http://www.karmadecay.com/' + url.replace(/http:\/\//, '') + '\'></head></html>" ';
+			out +=         'rel="noreferrer">search on karmadecay</a></li>';
+			out += '</ul>';
+			out += '</div>';
+			status.innerHTML += out;
 		}  
 	}, 5000);
 	gebi("output").innerHTML = '';
