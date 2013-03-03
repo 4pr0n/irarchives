@@ -85,7 +85,7 @@ class DB:
 			questions = ''
 			for i in xrange(0, len(values)):
 				if questions != '': questions += ','
-				questions += '%s'
+				questions += '?'
 			exec_string = '''insert into %s values (%s)''' % (table, questions)
 			result = cur.execute(exec_string, values)
 			#self.conn.commit()

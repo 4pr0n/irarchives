@@ -181,7 +181,7 @@ def start():
 			else:
 				try:
 					#web.download('http://i.derv.us/thumbs/%d.jpg' % urlid, 'thumbs/%d.jpg' % urlid)
-					#item['thumb'] = 'http://i.rarchives.com/thumbs/%d.jpg' % urlid
+					#item['thumb'] = '/thumbs/%d.jpg' % urlid
 					item['thumb'] = 'images/nothumb.png'
 				except:
 					item['thumb'] = ''
@@ -203,11 +203,11 @@ def start():
 			item['height']    = height
 			item['size']      = size
 			if path.exists('thumbs/%d.jpg' % urlid):
-				item['thumb'] = 'http://i.rarchives.com/thumbs/%d.jpg' % urlid
+				item['thumb'] = '/thumbs/%d.jpg' % urlid
 			else:
 				try:
 					web.download('http://i.derv.us/thumbs/%d.jpg' % urlid, 'thumbs/%d.jpg' % urlid)
-					item['thumb'] = 'http://i.rarchives.com/thumbs/%d.jpg' % urlid
+					item['thumb'] = '/thumbs/%d.jpg' % urlid
 				except:
 					# File must not exist here or there.
 					item['thumb'] = ''
