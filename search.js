@@ -466,7 +466,7 @@ function setTheme() {
         newlink.setAttribute("type", "text/css");
         newlink.setAttribute("href", theme + '.css');
 	 
-        document.getElementsByTagName("head").item(0).replaceChild(newlink, oldlink);
+        document.getElementsByTagName("head")[0].replaceChild(newlink, oldlink);
 }
 
 function setCookie(key, value) {
