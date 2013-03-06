@@ -181,6 +181,7 @@ def get_image_hash(url, postid=0, comment=None, albumid=0):
 	else:
 		# Download & Calculate hash for image
 		if '?' in ext: ext = ext[:ext.find('?')]
+		if '/' in ext: ext = ext[:ext.find('/')]
 		(file, temp_image) = tempfile.mkstemp(prefix='redditimg', suffix='.'+ext)
 		close(file)
 		print 'downloading %s' % (url)
