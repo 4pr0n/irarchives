@@ -42,6 +42,17 @@ if import_failed:
 		print '\un Unable to load JSON library! exiting'
 		exit(1)
 
+# Checks if username is a valid reddit username
+# Assumes input is lowercase & stripped of whitespace
+def is_user_valid(username):
+	allowed = 'abcdefghijklmnopqrstuvwxyz1234567890_-'
+	valid = True
+	for c in username:
+		if not c in allowed:
+			valid = False
+			break
+	return valid
+
 ######################
 # SEARCH BY USER
 def get_user(user, start=0, count=50):
@@ -129,6 +140,9 @@ def start():
 				return
 	elif 'user' in keys:
 		user = keys['user']
+		if not is_user_valid(user):
+			print '{"error": "invalid username"}\n\n'
+			return
 		if 'start' in keys and 'count' in keys:
 			start = keys['start']
 			count = keys['count']
@@ -192,6 +206,7 @@ def start():
 			item['ups']     = ups
 			item['downs']   = downs
 			item['created'] = created
+			item['ranking'] = 0
 			comments.append(item)
 		else:
 			# post
@@ -226,6 +241,7 @@ def start():
 			item['created']   = created
 			item['is_self']   = int(is_self)
 			item['over_18']   = int(over_18)
+			item['ranking']   = 0
 			posts.append(item)
 			if len(posts) >= 40: break
 		
@@ -233,9 +249,20 @@ def start():
 			u = db.select("url", "Albums", "id = %d" % albumid)[0][0]
 			item['url'] = u
 	
+	# Sorting algorithm (favors me & source subreddits)
+	for post in posts:
+		post['ranking'] += int(post['comments'])
+		if post['author'] in ['pervertedbylanguage', 'WakingLife', '4_pr0n']:
+			post['ranking'] += 500
+		if post['subreddit'] in ['tipofmypenis', 'pornID', 'gonewild', 'AmateurArchives']:
+			post['ranking'] += 500
+	for comment in comments:
+		comment['ups'] += int(comment['ups'])
+		if comment['author'] in ['pervertedbylanguage', 'WakingLife', '4_pr0n']:
+			comment['ranking'] += 500
+	posts = sorted(posts, reverse=True, key=lambda tup: tup['ranking'])
+	comments = sorted(comments, reverse=True, key=lambda tup: tup['ranking'])
 	result = {}
-	posts = sorted(posts, reverse=True, key=lambda tup: tup['comments'])
-	comments = sorted(comments, reverse=True, key=lambda tup: tup['ups'])
 	result['posts']    = posts
 	result['comments'] = comments
 	print json.dumps(result)

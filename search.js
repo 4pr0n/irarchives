@@ -55,6 +55,30 @@ function userKeyDown(evt) {
 	}
 }
 
+function getExternalSearchLinks(url) {
+	var out = '';
+	out += '<div style="text-align: left;">';
+	out += '<ul>';
+	out += '<li> <a class="external_link" ';
+	out +=         'href="data:text/html;charset=utf-8, ';
+	out +=                '<html><head><meta http-equiv=\'REFRESH\' content=\'0;url=';
+	out +=         	      'http://images.google.com/searchbyimage?image_url=' + url + '\'></head></html>" ';
+	out +=         'rel="noreferrer">search on google images</a></li>';
+	out += '<li> <a class="external_link" ';
+	out +=         'href="data:text/html;charset=utf-8, ';
+	out +=                '<html><head><meta http-equiv=\'REFRESH\' content=\'0;url=';
+	out +=                'http://www.tineye.com/search?pluginver=bookmark_1.0&url=' + url + '\'></head></html>" ';
+	out +=         'rel="noreferrer">search on tineye</a></li>';
+	out += '<li> <a class="external_link" ';
+	out +=         'href="data:text/html;charset=utf-8, ';
+	out +=                '<html><head><meta http-equiv=\'REFRESH\' content=\'0;url=';
+	out +=                'http://www.karmadecay.com/' + url.replace(/http:\/\//, '') + '\'></head></html>" ';
+	out +=         'rel="noreferrer">search on karmadecay</a></li>';
+	out += '</ul>';
+	out += '</div>';
+	return out;
+}
+
 // Sends asynchronous XML request, handles response
 function sendSearchRequest(query) {
 	var request = makeHttpObject();
@@ -64,26 +88,7 @@ function sendSearchRequest(query) {
 		if (status.innerHTML.indexOf('searching...') >= 0) {
 			status.innerHTML += '<br>the site is currently lagging. you can keep waiting or try again later.';
 			var url = gebi('url').value.replace(/</g, '').replace(/>/g, '');
-			var out = '';
-			out += '<div style="text-align: left;">';
-			out += '<ul>';
-			out += '<li> <a class="external_link" ';
-			out +=         'href="data:text/html;charset=utf-8, ';
-			out +=                '<html><head><meta http-equiv=\'REFRESH\' content=\'0;url=';
-			out +=         	      'http://images.google.com/searchbyimage?image_url=' + url + '\'></head></html>" ';
-			out +=         'rel="noreferrer">search on google images</a></li>';
-			out += '<li> <a class="external_link" ';
-			out +=         'href="data:text/html;charset=utf-8, ';
-			out +=                '<html><head><meta http-equiv=\'REFRESH\' content=\'0;url=';
-			out +=                'http://www.tineye.com/search?pluginver=bookmark_1.0&url=' + url + '\'></head></html>" ';
-			out +=         'rel="noreferrer">search on tineye</a></li>';
-			out += '<li> <a class="external_link" ';
-			out +=         'href="data:text/html;charset=utf-8, ';
-			out +=                '<html><head><meta http-equiv=\'REFRESH\' content=\'0;url=';
-			out +=                'http://www.karmadecay.com/' + url.replace(/http:\/\//, '') + '\'></head></html>" ';
-			out +=         'rel="noreferrer">search on karmadecay</a></li>';
-			out += '</ul>';
-			out += '</div>';
+			var out = getExternalSearchLinks(url);
 			status.innerHTML += out;
 		}  
 	}, 5000);
@@ -125,24 +130,7 @@ function handleSearchResponse(responseText) {
 		
 		var url = gebi('url').value.replace(/</g, '').replace(/>/g, '');
 		if (document.location.href.indexOf('?user=') == -1) {
-			var out = '';
-			out += '<ul>';
-			out += '<li> <a class="external_link" ';
-			out +=         'href="data:text/html;charset=utf-8, ';
-			out +=                '<html><head><meta http-equiv=\'REFRESH\' content=\'0;url=';
-			out +=         	      'http://images.google.com/searchbyimage?image_url=' + url + '\'></head></html>" ';
-			out +=         'rel="noreferrer">search on google images</a></li>';
-			out += '<li> <a class="external_link" ';
-			out +=         'href="data:text/html;charset=utf-8, ';
-			out +=                '<html><head><meta http-equiv=\'REFRESH\' content=\'0;url=';
-			out +=                'http://www.tineye.com/search?pluginver=bookmark_1.0&url=' + url + '\'></head></html>" ';
-			out +=         'rel="noreferrer">search on tineye</a></li>';
-			out += '<li> <a class="external_link" ';
-			out +=         'href="data:text/html;charset=utf-8, ';
-			out +=                '<html><head><meta http-equiv=\'REFRESH\' content=\'0;url=';
-			out +=                'http://www.karmadecay.com/' + url.replace(/http:\/\//, '') + '\'></head></html>" ';
-			out +=         'rel="noreferrer">search on karmadecay</a></li>';
-			out += '</ul>';
+			var out = getExternalSearchLinks(url);
 			output(out);
 		} else {
 			output('<br>');
@@ -179,24 +167,7 @@ function handleSearchResponse(responseText) {
 		output_comments(result.join(''));
 	}
 	var url = gebi('url').value.replace(/</g, '').replace(/>/g, '');
-	var out = '';
-	out += '<ul>';
-	out += '<li> <a class="external_link" ';
-	out +=         'href="data:text/html;charset=utf-8, ';
-	out +=                '<html><head><meta http-equiv=\'REFRESH\' content=\'0;url=';
-	out +=         	      'http://images.google.com/searchbyimage?image_url=' + url + '\'></head></html>" ';
-	out +=         'rel="noreferrer">search on google images</a></li>';
-	out += '<li> <a class="external_link" ';
-	out +=         'href="data:text/html;charset=utf-8, ';
-	out +=                '<html><head><meta http-equiv=\'REFRESH\' content=\'0;url=';
-	out +=                'http://www.tineye.com/search?pluginver=bookmark_1.0&url=' + url + '\'></head></html>" ';
-	out +=         'rel="noreferrer">search on tineye</a></li>';
-	out += '<li> <a class="external_link" ';
-	out +=         'href="data:text/html;charset=utf-8, ';
-	out +=                '<html><head><meta http-equiv=\'REFRESH\' content=\'0;url=';
-	out +=                'http://www.karmadecay.com/' + url.replace(/http:\/\//, '') + '\'></head></html>" ';
-	out +=         'rel="noreferrer">search on karmadecay</a></li>';
-	out += '</ul>';
+	var out = getExternalSearchLinks(url);
 	output(out);
 }
 
