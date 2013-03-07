@@ -21,8 +21,9 @@ function redirect_search() {
 }
 
 function search_click() {
-	var url = gebi("url");
-	sendSearchRequest('search.cgi?url=' + url.value);
+	var url = gebi("url").value;
+	if (user_redirect_check(url)) { return; }
+	sendSearchRequest('search.cgi?url=' + url);
 	url.blur();
 }
 
@@ -527,6 +528,14 @@ function collapseMenu() {
 
 function gotoRoot() {
 	window.location = document.location.pathname;
+}
+
+function user_redirect_check(user) {
+	var re = /^([-_]?[A-Za-z0-9])*$/;
+	if (!re.test(user)) { return false; }
+	gebi("user").value = user;
+	redirect_user();
+	return true;
 }
 
 // Function to run after window has loaded

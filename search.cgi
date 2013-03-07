@@ -47,7 +47,7 @@ if import_failed:
 def is_user_valid(username):
 	allowed = 'abcdefghijklmnopqrstuvwxyz1234567890_-'
 	valid = True
-	for c in username:
+	for c in username.lower():
 		if not c in allowed:
 			valid = False
 			break
