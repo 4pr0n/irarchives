@@ -2,9 +2,10 @@
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html>
 	<head>
+		<title>{NSFW} reddit reverse image search</title>
+		<meta name="description" content="Search NSFW subreddits by image. Easily find the source for some photos (and more) by finding the relevant posts on reddit.">
 		<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
 		<meta content="utf-8" http-equiv="encoding">
-		<title>{NSFW} reddit reverse image search</title>
 		<link rel="stylesheet" type="text/css" href="dark.css"/>
 	</head>
 	
@@ -17,17 +18,18 @@
 			</noscript>
 			<div id="div_bar" class="div_bar">
 				<table class="invisible"><tr><td style="text-align: left; width: 100%;">
-				<span style="text-align: left;">
-				bookmarklet for one-click search when viewing images:
-				<a class="bookmarklet" 
-				   id="bookmarklet"
-				   href="javascript:void(window.open('http://i.rarchives.com/?url='+encodeURIComponent(document.URL).replace(/\./g,'%25252E')));"
-				   onclick="gebi('bookmarklet_text').innerHTML = ''; return false;"
-				   onmousedown="gebi('bookmarklet_text').innerHTML = 'now drag & drop onto your bookmarks bar'; 
-						setTimeout(function() { gebi('bookmarklet_text').innerHTML = ''}, 2500);"
-				   onmouseup=  "gebi('bookmarklet_text').innerHTML = '';">
-					rarchives</a>
-				<span id="bookmarklet_text"></span>
+					<span style="text-align: left;">
+						bookmarklet for one-click search when viewing images:
+						<a class="bookmarklet" 
+							 id="bookmarklet"
+							 href="javascript:void(window.open('http://i.rarchives.com/?url='+encodeURIComponent(document.URL).replace(/\./g,'%25252E')));"
+							 onclick="gebi('bookmarklet_text').innerHTML = ''; return false;"
+							 onmousedown="gebi('bookmarklet_text').innerHTML = 'now drag & drop onto your bookmarks bar'; 
+								setTimeout(function() { gebi('bookmarklet_text').innerHTML = ''}, 2500);"
+							 onmouseup=  "gebi('bookmarklet_text').innerHTML = '';">
+							rarchives</a>
+						<span id="bookmarklet_text"></span>
+					</span>
 				</td><td style="text-align: right; white-space: nowrap;">
 					theme:
 					<a class="theme" href="javascript:setCookie('theme', 'dark'); document.location.href=document.location.href;">dark</a> |
@@ -173,16 +175,21 @@
 			</td>
 		</tr></table> <!-- end of 'menu' table -->
 		
+		<table style="width: 100%;"><tr><td>
+					<p class="footer" style="text-align: left; line-height: 120%;">suggestions or comments? <br>contact <a 
+				class="bookmarklet"
+				href="http://www.reddit.com/message/compose/?
+	to=4_pr0n&
+	subject=about%20i.rarchives.com&
+	message=I%20have%20a%20%3Ccomplaint%2C%20comment%2C%20suggestion%3E%3A"
+				>4_pr0n</a> via reddit
+			</p>
+		</td><td>
+			<p class="footer" style="text-align: right;">this site is not affiliated with reddit.com</p>
 		</td></tr></table> <!-- end of 'page' table -->
 		
-		<p class="footer">suggestions or comments? contact <a 
-			class="bookmarklet"
-			href="http://www.reddit.com/message/compose/?
-to=4_pr0n&
-subject=about%20i.rarchives.com&
-message=I%20have%20a%20%3Ccomplaint%2C%20comment%2C%20suggestion%3E%3A"
-			>4_pr0n</a> via reddit
-		</p>
+		</td></tr></table> <!-- end of 'page' table -->
+		
 	</body>
 </html>
 
