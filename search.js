@@ -24,7 +24,7 @@ function search_click() {
 	var url = gebi("url").value;
 	if (user_redirect_check(url)) { return; }
 	sendSearchRequest('search.cgi?url=' + url);
-	url.blur();
+	gebi('url').blur();
 }
 
 function redirect_user() {
@@ -124,6 +124,9 @@ function handleSearchResponse(responseText) {
 	if (resp['err'] != null) {
 		statusbar('<span class="search_count_empty">' + resp['err'] + '</span>');
 		return;
+	}
+	if (resp['url'] != null) {
+		gebi('url').value = resp['url']
 	}
 	if (resp.posts.length == 0 && resp.comments.length == 0) {
 		// No results, show alternatives

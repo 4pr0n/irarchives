@@ -132,7 +132,7 @@ def start():
 		else:
 			# Download and collect image information 
 			# (hash, dimensions, size) located at 'url'
-			(hash, width, height, bytes) = get_image_info(url)
+			(hash, width, height, bytes, url) = get_image_info(url)
 			if hash == None or hash == '':
 				print json.dumps({"err": 'could not retrieve image from url<br>' + \
 					'please use <a style="color: #f66; text-decoration: underline" ' + \
@@ -167,6 +167,7 @@ def start():
 		result = {}
 		result['posts']    = []
 		result['comments'] = []
+		result['url']      = url
 		print json.dumps(result)
 		return
 	
@@ -265,6 +266,7 @@ def start():
 	result = {}
 	result['posts']    = posts
 	result['comments'] = comments
+	result['url']      = url
 	print json.dumps(result)
 	
 
@@ -282,28 +284,33 @@ def get_keys():
 
 
 def get_image_info(url):
-	""" Gets image hash, width, height, and bytes based on image in URL. """
+	""" Gets image hash, width, height, bytes, and URL based on image in URL. """
 	if '?' in url: url = url[:url.find('?')]
 	if '#' in url: url = url[:url.find('#')]
-	if not '.' in url: return ('', 0, 0, 0)
+	if not '.' in url: return ('', 0, 0, 0, '')
 	
 	if 'reddit.com' in url:
 		# reddit link; find the URL
 		if not url.endswith('.json'): url += '.json'
 		r = web.get(url)
-		if not '"url": "' in r: return ('', 0, 0, 0)
+		if not '"url": "' in r: return ('', 0, 0, 0, '')
 		url = web.between(r, '"url": "', '"')[0]
 	
 	if 'imgur.com' in url and 'imgur.com/a/' in url:
 		# imgur album
 		while url.endswith('/'): url = url[:-1]
 		r = web.get('%s/noscript' % url)
-		if not 'src="http://i.imgur.com/' in r: return ('', 0, 0, 0)
+		if not 'src="http://i.imgur.com/' in r: return ('', 0, 0, 0, '')
 		url = 'http://i.imgur.com/%s' % web.between(r, 'src="http://i.imgur.com/', '"')[0]
+		if 'h.' in url:
+			tempurl = url.replace('h.', '.')
+			m = web.get_meta(tempurl)
+			if 'Content-Type' in m and 'image' in m['Content-Type']:
+				url = tempurl
 		
 	if '?' in url: url = url[:url.find('?')]
 	if '#' in url: url = url[:url.find('#')]
-	if not '.' in url: return ('', 0, 0, 0)
+	if not '.' in url: return ('', 0, 0, 0, '')
 	ext = url.lower()[url.rfind('.') + 1:]
 	
 	if ext in ['jpg', 'jpeg', 'gif', 'png']:
@@ -313,19 +320,19 @@ def get_image_info(url):
 		# Single image, need to get direct link to image (imgur.com/ASDF1 to i.imgur.com/ASDF1.jpg)
 		r = web.get(url)
 		urls = web.between(r, '<link rel="image_src" href="', '"')
-		if len(urls) == 0: return ('', 0, 0, 0)
+		if len(urls) == 0: return ('', 0, 0, 0, '')
 		url = urls[0].strip()
 		url = url.replace('http://imgur.com', 'http://i.imgur.com')
 		ext = url.lower()[url.rfind('.') + 1:]
 	else:
 		# Not hot-linked and non-imgur image; can't get hash.
-		return ('', 0, 0, 0)
+		return ('', 0, 0, 0, '')
 	
 	# Download image
 	if '?' in ext: ext = ext[:ext.find('?')]
 	(file, temp_image) = tempfile.mkstemp(prefix='redditimg', suffix='.'+ext)
 	close(file)
-	if not web.download(url, temp_image): return ('', 0, 0, 0)
+	if not web.download(url, temp_image): return ('', 0, 0, 0, '')
 	
 	# Calculate hash of downloaded jmage
 	try:                hash = str(avhash(temp_image))
@@ -337,12 +344,12 @@ def get_image_info(url):
 	if hash == '': 
 		try: remove(temp_image) # Delete the temporary file
 		except OSError: pass
-		return ('', 0, 0, 0)
+		return ('', 0, 0, 0, '')
 	
 	(width, height) = dimensions(temp_image)
 	filesize = path.getsize(temp_image)
 	
-	return (hash, width, height, filesize)
+	return (hash, width, height, filesize, url)
 
 
 ######################
