@@ -282,19 +282,34 @@ def get_keys():
 
 
 def get_image_info(url):
-	""" Gets image hash (int) based on image in URL. Returns 0 if not found. """
+	""" Gets image hash, width, height, and bytes based on image in URL. """
+	if '?' in url: url = url[:url.find('?')]
+	if '#' in url: url = url[:url.find('#')]
+	if not '.' in url: return ('', 0, 0, 0)
+	
+	if 'reddit.com' in url:
+		# reddit link; find the URL
+		if not url.endswith('.json'): url += '.json'
+		r = web.get(url)
+		if not '"url": "' in r: return ('', 0, 0, 0)
+		url = web.between(r, '"url": "', '"')[0]
+	
+	if 'imgur.com' in url and 'imgur.com/a/' in url:
+		# imgur album
+		while url.endswith('/'): url = url[:-1]
+		r = web.get('%s/noscript' % url)
+		if not 'src="http://i.imgur.com/' in r: return ('', 0, 0, 0)
+		url = 'http://i.imgur.com/%s' % web.between(r, 'src="http://i.imgur.com/', '"')[0]
+		
 	if '?' in url: url = url[:url.find('?')]
 	if '#' in url: url = url[:url.find('#')]
 	if not '.' in url: return ('', 0, 0, 0)
 	ext = url.lower()[url.rfind('.') + 1:]
 	
-	if 'reddit.com' in url:
-		# TODO reddit link. retrieve post url
-		return ('', 0, 0, 0)
-	elif ext in ['jpg', 'jpeg', 'gif', 'png']:
+	if ext in ['jpg', 'jpeg', 'gif', 'png']:
 		url = url.replace('http://imgur.com', 'http;//i.imgur.com')
 	
-	elif 'imgur.com' in url and not '.com/a/' in url:
+	elif 'imgur.com' in url and not 'imgur.com/a/' in url:
 		# Single image, need to get direct link to image (imgur.com/ASDF1 to i.imgur.com/ASDF1.jpg)
 		r = web.get(url)
 		urls = web.between(r, '<link rel="image_src" href="', '"')
