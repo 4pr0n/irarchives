@@ -142,8 +142,10 @@ def get_image_hash(url, postid=0, comment=None, albumid=0):
 	
 	if ext.endswith('jpg') or ext.endswith('jpeg') or ext.endswith('gif') or ext.endswith('png'):
 		# If it's a direct link to a image, then we already have the URL
-		url = url.replace('http://imgur.com', 'http://i.imgur.com')
-		pass
+		# The app locks up on FBCND (facebook) requests. Ignore these
+		if url.startswith('https://fbcdn'): return
+		if 'http://imgur.com' in url:
+			url = url.replace('http://imgur.com', 'http://i.imgur.com')
 		
 	elif 'imgur.com'         in url:
 		# It's an imgur link

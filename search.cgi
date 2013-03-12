@@ -71,10 +71,10 @@ def get_user(user, start=0, count=50):
 		p['height'] = ''
 		p['size'] = ''
 		p['hexid'] = hexid
-		p['title'] = title
+		p['title'] = title.replace('<', '&lt;').replace('>', '&gt;')
 		p['thumb'] = ''
 		p['url'] = url
-		p['text'] = text
+		p['text'] = text.replace('<', '&lt;').replace('>', '&gt;')
 		p['author'] = author
 		p['permalink'] = permalink
 		p['subreddit'] = subreddit
@@ -93,7 +93,7 @@ def get_user(user, start=0, count=50):
 		comment['width'] = 0
 		comment['height'] = 0
 		comment['size'] = 0
-		comment['body'] = body
+		comment['body'] = body.replace('<', '&lt;').replace('>', '&gt;')
 		comment['author'] = author
 		comment['hexid'] = hexid
 		comment['ups'] = ups
@@ -108,6 +108,24 @@ def get_user(user, start=0, count=50):
 	print json.dumps(result)
 	print '\n\n'
 
+def get_album_images(url):
+	images = []
+	albumids = db.select('id', 'Albums', 'url = "%s"' % url)
+	if len(albumids) > 0:
+		urlids = db.select('urlid', 'Images', 'albumid = %d' % albumids[0][0])
+		for urlid in urlids:
+			imgs = db.select('url', 'ImageURLs', 'id = %d' % urlid)
+			if len(imgs) > 0:
+				image = {}
+				if path.exists('thumbs/%d.jpg' % urlid):
+					image['thumb'] = 'thumbs/%d.jpg' % urlid
+				image['url'] = imgs[0][0]
+				images.append(image)
+	result = {}
+	result['images'] = images
+	print json.dumps(result)
+	print '\n'
+
 ######################
 # MAIN METHOD
 
@@ -121,6 +139,9 @@ def start():
 		url = url.replace('"', '%22')
 		if url.strip() == '' or not '.' in url:
 			print '{"error": "invalid url"}\n\n'
+			return
+		if 'imgur.com/a/' in url:
+			get_album_images(url)
 			return
 		# Check if URL is already in database
 		# (Don't download unless we have to)

@@ -128,6 +128,44 @@ function handleSearchResponse(responseText) {
 	if (resp['url'] != null) {
 		gebi('url').value = resp['url']
 	}
+	if (resp['images'] != null) {
+		// Image results for album
+		var out = '<center><table>';
+		out += '<tr><td colspan="5" class="search_result_title">' + resp.images.length + ' album images</td></tr>';
+		out += '<tr>';
+		for (var i = 0; i < resp.images.length; i++) {
+			var url = resp.images[i].url;
+			var thumb = '';
+			if (resp.images[i].thumb == null) {
+				var tempi = url.lastIndexOf('.');
+				thumb = url.substr(0, tempi) + 's' + url.substr(tempi);
+			} else {
+				thumb = resp.images[i].thumb;
+			}
+			out += '<td>';
+			out += '<a href="' + url + '">';
+			out += '<img width="90px" height="90px" style="width: 90px; height: 90px;" src="' + thumb + '">';
+			out += '</a>';
+			//out += resp.images[i];
+			out += '</td>';
+			if (i % 5 == 4) {
+				out += '</tr><tr>';
+			}
+		}
+		out += '</td></tr>';
+		out += '</table>';
+		out += '<div class="search_result_title">' + resp.images.length + ' album links</div>';
+		out += '<div style="padding: 20px; font-size: 0.8em;">';
+		for (var i = 0; i < resp.images.length; i++) {
+			out += '<a href="' + resp.images[i].url + '">';
+			out += resp.images[i].url;
+			out += '</a><br>';
+		}
+		out += '</center>';
+		output(out);
+		statusbar('');
+		return;
+	}
 	if (resp.posts.length == 0 && resp.comments.length == 0) {
 		// No results, show alternatives
 		statusbar('<span class="search_count_empty">no results</span>');
@@ -434,7 +472,7 @@ function setTheme() {
 	var theme = getCookie('theme');
 	if (theme == '') 
 		theme = 'dark';
-	var oldlink = document.getElementsByTagName("link").item('dark.css');
+	var oldlink = document.getElementsByTagName("link")[0];
  	
         var newlink = document.createElement("link")
         newlink.setAttribute("rel", "stylesheet");

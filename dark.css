@@ -235,7 +235,7 @@ a.external_link {
 	font-weight: bold;
 }
 
-td.search_result_title {
+.search_result_title {
 	color: #f00;
 	font-weight: bold;
 	font-size: 1.5em;

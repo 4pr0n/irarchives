@@ -221,7 +221,7 @@ td.search_status_result {
 	font-size: 1.5em;
 }
 
-td.search_result_title {
+.search_result_title {
 	color: #222;
 	font-weight: bold;
 	font-size: 1.5em;
