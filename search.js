@@ -136,15 +136,15 @@ function handleSearchResponse(responseText) {
 		for (var i = 0; i < resp.images.length; i++) {
 			var url = resp.images[i].url;
 			var thumb = '';
-			if (resp.images[i].thumb == null) {
+			if (true || resp.images[i].thumb == null) {
 				var tempi = url.lastIndexOf('.');
 				thumb = url.substr(0, tempi) + 's' + url.substr(tempi);
 			} else {
 				thumb = resp.images[i].thumb;
 			}
-			out += '<td>';
+			out += '<td align="center" valign="center" style="text-align: center; vertical-align: center;">';
 			out += '<a href="' + url + '">';
-			out += '<img width="90px" height="90px" style="width: 90px; height: 90px;" src="' + thumb + '">';
+			out += '<img src="' + thumb + '">';
 			out += '</a>';
 			//out += resp.images[i];
 			out += '</td>';
