@@ -23,6 +23,9 @@ function redirect_search() {
 function search_click() {
 	var url = gebi("url").value;
 	if (user_redirect_check(url)) { return; }
+	if (url.indexOf('://') == -1) {
+		url = 'http://' + url;
+	}
 	sendSearchRequest('search.cgi?url=' + url);
 	gebi('url').blur();
 }
@@ -585,7 +588,7 @@ function init() {
 	setTheme();
 	if (!checkURL()) {
 		// Not loading an image; randomly pick a url to display
-		var urls = ['http://i.imgur.com/IFdWn.jpg', 'http://i.imgur.com/3qrBM.jpg', 'http://i.minus.com/ibu7TXSVaN73Nn.gif', 'http://i.imgur.com/O1IXj.jpg', 'http://i.imgur.com/QNj8w.jpg', 'http://i.imgur.com/xA1wr.jpg', 'http://i.imgur.com/54SAK.jpg', 'http://i.imgur.com/EpMv9.jpg', 'http://i.imgur.com/9VAfG.jpg', 'http://i.imgur.com/OaSfh.gif', 'http://i.imgur.com/iHjXO.jpg', 'http://i.imgur.com/IDLu8.jpg', 'http://i.imgur.com/ReKZC.jpg', 'http://i.imgur.com/mhvSa.jpg', 'http://i.imgur.com/qfzpA.jpg'];
+		var urls = ['http://i.imgur.com/Xz42HQa.jpg', 'http://i.imgur.com/IFdWn.jpg', 'http://i.imgur.com/3qrBM.jpg', 'http://i.minus.com/ibu7TXSVaN73Nn.gif', 'http://i.imgur.com/O1IXj.jpg', 'http://i.imgur.com/QNj8w.jpg', 'http://i.imgur.com/xA1wr.jpg', 'http://i.imgur.com/54SAK.jpg', 'http://i.imgur.com/EpMv9.jpg', 'http://i.imgur.com/9VAfG.jpg', 'http://i.imgur.com/OaSfh.gif', 'http://i.imgur.com/iHjXO.jpg', 'http://i.imgur.com/IDLu8.jpg', 'http://i.imgur.com/ReKZC.jpg', 'http://i.imgur.com/mhvSa.jpg', 'http://i.imgur.com/qfzpA.jpg'];
 		gebi('url').value = urls[Math.floor(Math.random() * urls.length)];
 	}
 }
