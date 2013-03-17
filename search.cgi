@@ -140,8 +140,8 @@ def start():
 		if url.strip() == '' or not '.' in url:
 			print '{"error": "invalid url"}\n\n'
 			return
-		if 'imgur.com/a/' in url:
-			get_album_images(url)
+		if url.startswith('album:'):
+			get_album_images(url[len('album:'):])
 			return
 		# Check if URL is already in database
 		# (Don't download unless we have to)
