@@ -249,7 +249,10 @@ def get_postimage_hashes(url, postid=0, comment=None):
 	# Insert into Albums, get ID, if exists: return
 	albumid = db.insert('Albums', (None, url))
 	db.commit()
-	if albumid == -1: return
+	if albumid == -1:
+		albumids = db.select('id', 'Albums', 'url = "%s"' % urldb)
+		if len(albumids) == 0: return
+		albumid = albumids[0][0]
 	
 	r = web.get(url)
 	
