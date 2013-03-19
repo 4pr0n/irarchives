@@ -452,7 +452,7 @@ def start():
 						post = posts.pop(0)
 						index += 1
 						
-						print '%4d/%d) scraping: %s' % (index, total_posts, post.__repr__())
+						print '%4d/%d) scraping: %s' % (index, total_posts, post.__repr__().replace('\n', ''))
 						stdout.flush()
 						
 						time_started = time.time()

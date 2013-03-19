@@ -215,12 +215,7 @@ def start():
 			if path.exists('thumbs/%d.jpg' % urlid):
 				item['thumb'] = 'thumbs/%d.jpg' % urlid
 			else:
-				try:
-					#web.download('http://i.derv.us/thumbs/%d.jpg' % urlid, 'thumbs/%d.jpg' % urlid)
-					#item['thumb'] = '/thumbs/%d.jpg' % urlid
-					item['thumb'] = 'images/nothumb.png'
-				except:
-					item['thumb'] = ''
+				item['thumb'] = ''
 			item['hexid']   = hexid
 			item['postid']  = post_hexid
 			item['author']  = author
@@ -228,7 +223,7 @@ def start():
 			item['ups']     = ups
 			item['downs']   = downs
 			item['created'] = created
-			item['ranking'] = 0
+			item['ranking'] = ups
 			comments.append(item)
 		else:
 			# post
@@ -240,14 +235,9 @@ def start():
 			item['height']    = height
 			item['size']      = size
 			if path.exists('thumbs/%d.jpg' % urlid):
-				item['thumb'] = '/thumbs/%d.jpg' % urlid
+				item['thumb'] = 'thumbs/%d.jpg' % urlid
 			else:
-				try:
-					web.download('http://i.derv.us/thumbs/%d.jpg' % urlid, 'thumbs/%d.jpg' % urlid)
-					item['thumb'] = '/thumbs/%d.jpg' % urlid
-				except:
-					# File must not exist here or there.
-					item['thumb'] = ''
+				item['thumb'] = ''
 			item['hexid']     = hexid
 			item['title']     = title
 			item['url']       = posturl
@@ -264,7 +254,32 @@ def start():
 			item['is_self']   = int(is_self)
 			item['over_18']   = int(over_18)
 			item['ranking']   = 0
+			
+			count = 0
+			# Get comments containing albums in this post
+			for (comid, compostid, comhexid, comauthor, combody, comups, comdowns, comcreated) in \
+					db.select('*', 'Comments', 'postid = %d' % id):
+				count += 1
+				#if not 'imgur.com/a/' in combody: continue
+				citem = {}
+				citem['imageurl']= ''
+				citem['width']   = 0
+				citem['height']  = 0
+				citem['size']    = ''
+				citem['thumb']   = ''
+				citem['hexid']   = comhexid # Link to comment
+				citem['postid']  = hexid # From parent post
+				citem['author']  = comauthor
+				citem['body']    = combody
+				citem['ups']     = comups
+				citem['downs']   = comdowns
+				citem['created'] = comcreated
+				citem['ranking'] = comups
+				comments.append(citem)
+			item['counties'] = count
 			posts.append(item)
+
+			
 			if len(posts) >= 40: break
 		
 		if albumid != 0:
