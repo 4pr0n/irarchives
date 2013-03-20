@@ -348,7 +348,7 @@ def parse_image(url, postid=0, commentid=0, albumid=0):
 		Populates 'Hashes', 'ImageURLs', and 'Images' tables
 	"""
 	try:
-		(hashid, urlid) = get_hashid_and_urlid(url)
+		(hashid, urlid, downloaded) = get_hashid_and_urlid(url)
 	except Exception, e:
 		print '\n      [!] failed to calculate hash for %s' % url
 		print '      [!] Exception: %s' % str(e)
@@ -362,12 +362,13 @@ def get_hashid_and_urlid(url, verbose=True):
 		Retrieves hash ID ('Hashes' table) and URL ID 
 		('ImageURLs' table) for an image at a given URL.
 		Populates 'Hashes' and 'ImageURLs' if needed.
+		3rd tuple is True if downloading of image was required
 	"""
 	existing = db.select('id, hashid', 'ImageURLs', 'url = "%s"' % url)
 	if len(existing) > 0:
 		urlid = existing[0][0]
 		hashid = existing[0][1]
-		return (hashid, urlid)
+		return (hashid, urlid, False)
 	
 	# Download image
 	(file, temp_image) = tempfile.mkstemp(prefix='redditimg', suffix='.jpg')
@@ -407,6 +408,7 @@ def get_hashid_and_urlid(url, verbose=True):
 		(width, height) = dimensions(temp_image)
 		filesize = path.getsize(temp_image)
 		urlid = db.insert('ImageURLs', (None, url, hashid, width, height, filesize))
+		db.commit()
 		create_thumb(temp_image, urlid) # Make a thumbnail!
 		if verbose: print 'done'
 	except Exception, e:
@@ -414,7 +416,7 @@ def get_hashid_and_urlid(url, verbose=True):
 		except: pass
 		raise e
 	remove(temp_image)
-	return (hashid, urlid)
+	return (hashid, urlid, True)
 
 def imgur_get_highest_res(url):
 	""" Retrieves highest-res imgur image """
