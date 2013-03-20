@@ -6,7 +6,7 @@ import cgi
 import tempfile
 from os   import path, close, remove
 from sys  import argv
-from time import sleep
+from time import sleep, time
 import json
 
 ######################
@@ -15,7 +15,7 @@ from ClientDB import DB
 ######################
 # Image hashing      #
 from ImageHash import avhash, dimensions
-from scan2 import get_hashid_and_urlid
+from scan2 import get_hashid_and_urlid, db as scan2_db
 ######################
 # Web                #
 from Httpy import Httpy
@@ -27,7 +27,8 @@ web = Httpy()        # Web functionality
 # Constants
 TRUSTED_AUTHORS    = ['4_pr0n', 'pervertedbylanguage', 'WakingLife']
 TRUSTED_SUBREDDITS = ['AmateurArchives', 'gonewild', 'pornID', 'tipofmypenis']
-MAX_ALBUM_SEARCH_DEPTH = 5
+MAX_ALBUM_SEARCH_DEPTH = 3  # Number of images to download from album
+MAX_ALBUM_SEARCH_TIME  = 10 # Max time to search album in seconds
 
 def main():
 	""" Gets keys from query, performs search, prints results """
@@ -50,8 +51,10 @@ def get_results_tuple_for_image(url):
 	
 	try:
 		# Using scan2.py's method for retrieving hash
-		(hashid, urlid) = get_hashid_and_urlid(url, verbose=False)
-		image_hash = db.select('hash', 'Hashes', 'id = %d' % hashid)[0][0]
+		(hashid, urlid, downloaded) = get_hashid_and_urlid(url, verbose=False)
+		image_hashes = db.select('hash', 'Hashes', 'id = %d' % hashid)
+		if len(image_hashes) == 0: raise Exception('could not get hash for %s' % url)
+		image_hash = image_hashes[0][0]
 	except Exception, e:
 		raise e
 	
@@ -81,7 +84,7 @@ def get_results_tuple_for_image(url):
 			#related.append(related_dict)
 	posts    = sort_by_ranking(posts)
 	comments = sort_by_ranking(comments)
-	return (url, posts, comments, related)
+	return (url, posts, comments, related, downloaded)
 	
 def search_url(url):
 	""" Searches for a single URL, prints results """
@@ -90,7 +93,7 @@ def search_url(url):
 		return
 	
 	try:
-		(url, posts, comments, related) = \
+		(url, posts, comments, related, downloaded) = \
 				get_results_tuple_for_image(url)
 	except Exception, e:
 		print_error(str(e))
@@ -111,23 +114,31 @@ def search_album(url):
 	posts    = []
 	comments = []
 	related  = []
+	# Search stats
+	downloaded_count = 0
+	checked_count    = 0
+	time_started     = time()
 	for index, link in enumerate(links):
-		if index >= MAX_ALBUM_SEARCH_DEPTH: break
+		if downloaded_count >= MAX_ALBUM_SEARCH_DEPTH: break
+		if time() - time_started > MAX_ALBUM_SEARCH_TIME: break
 		link = 'http://i.%s' % link
 		if '?' in link: link = link[:link.find('?')]
 		if '#' in link: link = link[:link.find('#')]
 		link = imgur_get_highest_res(link)
+		checked_count += 1
 		try:
-			(imgurl, resposts, rescomments, resrelated) = \
+			(imgurl, resposts, rescomments, resrelated, downloaded) = \
 					get_results_tuple_for_image(link)
 			posts    += resposts
 			comments += rescomments
 			related  += resrelated
+			if downloaded: downloaded_count += 1
 			if len(posts + comments + related) > 0: break
 		except Exception, e:
 			continue
 	if len(posts + comments + related) == 0:
-		raise Exception('searched %d images from album; no results found' % MAX_ALBUM_SEARCH_DEPTH)
+		print_error('searched %d images from album; no results found' % checked_count)
+		return
 
 	print json.dumps( {
 			'url'      : url,
