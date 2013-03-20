@@ -5,6 +5,7 @@
 
 from os import path, mkdir, sep
 from sys import exit, argv
+from Httpy import Httpy
 
 from PIL import Image
 
@@ -63,12 +64,17 @@ if __name__ == '__main__':
 		exit(1)
 	filename = ' '.join(args)
 	if not path.exists(filename):
-		print 'file not found: %s' % (filename)
-		exit(1)
+		if '://' in filename:
+			web = Httpy()
+			web.download(filename, 'img.jpg')
+			filename = 'img.jpg'
+		else:
+			print 'file not found: %s' % (filename)
+			exit(1)
 	
 	print 'Hash:\t\t%d' % avhash(filename)
 	
 	dim = dimensions(filename)
 	print 'Dimensions:\t%dx%d' % (dim[0], dim[1])
 
-	create_thumb(filename, 1)
+	#create_thumb(filename, 1)
