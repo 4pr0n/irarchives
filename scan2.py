@@ -273,11 +273,14 @@ def sanitize_url(url):
 
 def parse_url(url, postid=0, commentid=0):
 	""" Gets image hash(es) from URL, populates database """
+	while url.endswith('/'): url = url[:-1]
 	if 'imgur.com' in url:
 		if '.com/a/' in url:
 			# Album
 			print ''
-			return parse_album(url, postid=postid, commentid=commentid)
+			result = parse_album(url, postid=postid, commentid=commentid)
+			db.commit()
+			return result
 		elif url.lower().endswith('.jpg') or \
 				url.lower().endswith('.jpeg') or \
 				url.lower().endswith('.png')  or \
@@ -304,7 +307,9 @@ def parse_url(url, postid=0, commentid=0):
 		# TODO Develop a way to find images in other websites?
 		return False
 	print ''
-	return parse_image(url, postid=postid, commentid=commentid)
+	result = parse_image(url, postid=postid, commentid=commentid)
+	db.commit()
+	return result
 
 def parse_album(url, postid=0, commentid=0):
 	""" Indexes every image in an imgur album """
@@ -352,7 +357,7 @@ def parse_image(url, postid=0, commentid=0, albumid=0):
 	return True
 
 
-def get_hashid_and_urlid(url):
+def get_hashid_and_urlid(url, verbose=True):
 	""" 
 		Retrieves hash ID ('Hashes' table) and URL ID 
 		('ImageURLs' table) for an image at a given URL.
@@ -367,23 +372,23 @@ def get_hashid_and_urlid(url):
 	# Download image
 	(file, temp_image) = tempfile.mkstemp(prefix='redditimg', suffix='.jpg')
 	close(file)
-	print '      [+] downloading %s ...' % url,
+	if verbose: print '      [+] downloading %s ...' % url,
 	stdout.flush()
 	if not web.download(url, temp_image):
-		print 'failed'
-		raise Exception('Unable to download image at %s' % url)
+		if verbose: print 'failed'
+		raise Exception('unable to download image at %s' % url)
 	# Get image hash
 	try:
-		print 'hashing ...',
+		if verbose: print 'hashing ...',
 		stdout.flush()
 		image_hash = str(avhash(temp_image))
 	except Exception, e:
 		# Failed to get hash, delete image & raise exception
-		print 'failed'
+		if verbose: print 'failed'
 		try: remove(temp_image)
 		except: pass
 		raise e
-	print 'indexing ...',
+	if verbose: print 'indexing ...',
 	stdout.flush()
 	
 	# Insert image hash into Hashes table
@@ -394,7 +399,7 @@ def get_hashid_and_urlid(url):
 		if len(hashids) == 0:
 			try: remove(temp_image)
 			except: pass
-			raise Exception('Unable to add hash to table, or find hash (wtf?)')
+			raise Exception('unable to add hash to table, or find hash (wtf?)')
 		hashid = hashids[0][0]
 	
 	# Image attributes
@@ -403,7 +408,7 @@ def get_hashid_and_urlid(url):
 		filesize = path.getsize(temp_image)
 		urlid = db.insert('ImageURLs', (None, url, hashid, width, height, filesize))
 		create_thumb(temp_image, urlid) # Make a thumbnail!
-		print 'done'
+		if verbose: print 'done'
 	except Exception, e:
 		try: remove(temp_image)
 		except: pass
