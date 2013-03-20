@@ -196,6 +196,7 @@ def start():
 	
 	posts    = []
 	comments = []
+	related_comments = []
 	# Search for image by hash 'hash'
 	images = db.select('*', 'Images', 'hashid in (select id from Hashes where hash = "%s") group by postid, commentid' % (hash))
 	for (urlid, hashid, albumid, postid, commentid) in images:
@@ -275,8 +276,7 @@ def start():
 				citem['downs']   = comdowns
 				citem['created'] = comcreated
 				citem['ranking'] = comups
-				comments.append(citem)
-			item['counties'] = count
+				related_comments.append(citem)
 			posts.append(item)
 
 			
@@ -303,6 +303,7 @@ def start():
 	result['posts']    = posts
 	result['comments'] = comments
 	result['url']      = url
+	result['related_comments'] = related_comments
 	print json.dumps(result)
 	
 
