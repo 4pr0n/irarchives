@@ -34,10 +34,10 @@ def main():
 	""" Gets keys from query, performs search, prints results """
 	keys = get_keys()
 	func_map = { 
-			'url' : search_url,
-			'user' : search_user,
+			'url'   : search_url,
+			'user'  : search_user,
 			'cache' : search_cache,
-			'text' : search_text
+			'text'  : search_text
 		}
 	for key in func_map:
 		if key in keys:
@@ -88,8 +88,23 @@ def get_results_tuple_for_image(url):
 	
 def search_url(url):
 	""" Searches for a single URL, prints results """
-	if '.com/a/' in url:
+	if url.lower().startswith('cache:'):
+		search_cache(url[len('cache:'):])
+		return
+	elif 'imgur.com/a/' in url:
 		search_album(url) # Searching album
+		return
+	elif url.lower().startswith('user:'):
+		search_user(url[len('user:'):])
+		return
+	elif url.lower().startswith('text:'):
+		search_text(url[len('text:'):])
+		return
+	elif 'reddit.com/u/' in url:
+		search_user(url[url.find('/u/')+3:])
+		return
+	elif 'reddit.com/user/' in url:
+		search_user(url[url.find('/user/')+6:])
 		return
 	
 	try:
@@ -106,36 +121,58 @@ def search_url(url):
 		} )
 	
 def search_album(url):
-	r = web.get('%s/noscript' % url)
-	links = web.between(r, 'img src="http://i.', '"')
-	if len(links) == 0:
-		print_error('empty imgur album (404?)')
-		return
 	posts    = []
 	comments = []
 	related  = []
-	# Search stats
-	downloaded_count = 0
 	checked_count    = 0
 	time_started     = time()
-	for index, link in enumerate(links):
-		if downloaded_count >= MAX_ALBUM_SEARCH_DEPTH: break
-		if time() - time_started > MAX_ALBUM_SEARCH_TIME: break
-		link = 'http://i.%s' % link
-		if '?' in link: link = link[:link.find('?')]
-		if '#' in link: link = link[:link.find('#')]
-		link = imgur_get_highest_res(link)
-		checked_count += 1
-		try:
-			(imgurl, resposts, rescomments, resrelated, downloaded) = \
-					get_results_tuple_for_image(link)
-			posts    += resposts
-			comments += rescomments
-			related  += resrelated
-			if downloaded: downloaded_count += 1
-			if len(posts + comments + related) > 0: break
-		except Exception, e:
-			continue
+	albumids = db.select('id', 'Albums', 'url = "%s"' % url)
+	if len(albumids) > 0:
+		albumid = albumids[0][0]
+		query_text  = 'id IN '
+		query_text += '(SELECT DISTINCT urlid FROM Images '
+		query_text +=  'WHERE albumid = %d)' % albumid
+		image_urls = db.select('url', 'ImageURLs', query_text)
+		for image_url in image_urls:
+			image_url = image_url[0]
+			if time() - time_started > MAX_ALBUM_SEARCH_TIME: break
+			checked_count += 1
+			try:
+				(imgurl, resposts, rescomments, resrelated, downloaded) = \
+						get_results_tuple_for_image(image_url)
+				posts    += resposts
+				comments += rescomments
+				related  += resrelated
+				if len(posts + comments + related) > 0: break
+			except Exception, e:
+				print str(e)
+				continue
+	else:
+		r = web.get('%s/noscript' % url)
+		links = web.between(r, 'img src="http://i.', '"')
+		if len(links) == 0:
+			print_error('empty imgur album (404?)')
+			return
+		# Search stats
+		downloaded_count = 0
+		for link in links:
+			if downloaded_count >= MAX_ALBUM_SEARCH_DEPTH: break
+			if time() - time_started > MAX_ALBUM_SEARCH_TIME: break
+			link = 'http://i.%s' % link
+			if '?' in link: link = link[:link.find('?')]
+			if '#' in link: link = link[:link.find('#')]
+			link = imgur_get_highest_res(link)
+			checked_count += 1
+			try:
+				(imgurl, resposts, rescomments, resrelated, downloaded) = \
+						get_results_tuple_for_image(link)
+				posts    += resposts
+				comments += rescomments
+				related  += resrelated
+				if downloaded: downloaded_count += 1
+				if len(posts + comments + related) > 0: break
+			except Exception, e:
+				continue
 	if len(posts + comments + related) == 0:
 		print_error('searched %d images from album; no results found' % checked_count)
 		return
@@ -148,13 +185,103 @@ def search_album(url):
 		} )
 
 def search_user(user):
-	pass
+	""" Returns posts/comments by a reddit user """
+	if user.strip() == '' or not is_user_valid(user):
+		print_error('invalid username')
+		return
+	posts    = []
+	comments = []
+	related  = []
+	# This search will pull up all posts and comments by the user
+	# NOTE It will also grab all comments containing links in the user's posts (!)
+	query_text  = 'postid IN '
+	query_text += '(SELECT DISTINCT id FROM Posts '
+	query_text +=  'WHERE author LIKE "%s" ' % user
+	query_text +=  'ORDER BY ups DESC LIMIT 50) '
+	query_text += 'OR '
+	query_text += 'commentid IN '
+	query_text += '(SELECT DISTINCT id FROM Comments '
+	query_text +=  'WHERE author LIKE "%s" ' % user
+	query_text +=  'ORDER BY ups DESC LIMIT 50) '
+	query_text += 'GROUP BY postid, commentid' #LIMIT 50'
+	# To avoid comments not created by the author, use this query:
+	#query_text = 'commentid = 0 AND postid IN (SELECT DISTINCT id FROM Posts WHERE author LIKE "%s" ORDER BY ups DESC LIMIT 50) OR commentid IN (SELECT DISTINCT id FROM Comments WHERE author LIKE "%s" ORDER BY ups DESC LIMIT 50) GROUP BY postid, commentid LIMIT 50' % (user, user)
+	images = db.select('urlid, albumid, postid, commentid', 'Images', query_text)
+	for (urlid, albumid, postid, commentid) in images:
+		# Get image's URL, dimensions & size
+		if commentid != 0:
+			# Comment
+			comment_dict = build_comment(commentid, urlid)
+			comments.append(comment_dict)
+		else:
+			# Post
+			post_dict = build_post(postid, urlid)
+			posts.append(post_dict)
+			
+			#related_dict = build_related_comment(postid, urlid)
+			#related.append(related_dict)
+	posts    = sort_by_ranking(posts)
+	comments = sort_by_ranking(comments)
+	print json.dumps( {
+			'url'      : 'user:%s' % user, #'http://reddit.com/user/%s' % user,
+			'posts'    : posts,
+			'comments' : comments,
+			'related'  : related
+		} )
 
 def search_cache(url):
-	pass
+	"""
+		Prints list of images inside of an album
+		The images are stored in the database, so 404'd albums
+		can be retrieved via this method (sometimes)
+	"""
+	try:
+		url = sanitize_url(url)
+	except Exception, e:
+		print_error(str(e))
+		return
+	images = []
+	query_text = 'id IN (SELECT urlid FROM Images WHERE albumid IN (SELECT DISTINCT id FROM albums WHERE url = "%s"))' % (url)
+	image_tuples = db.select('id, url', 'ImageURLs', query_text)
+	for (urlid, imageurl) in image_tuples:
+		image = {
+				'thumb' : 'thumbs/%d.jpg' % urlid,
+				'url'   : imageurl
+			}
+		images.append(image)
+	print json.dumps( {
+			'url'    : 'cache:%s' % url,
+			'images' : images
+		} )
 
 def search_text(text):
-	pass
+	""" Prints posts/comments containing text in title/body. """
+	posts    = []
+	comments = []
+	related  = []
+	query_text = 'commentid = 0 AND postid IN (SELECT DISTINCT id FROM Posts WHERE title LIKE "%%%s%%" or text LIKE "%%%s%%" ORDER BY ups DESC LIMIT 50) OR commentid IN (SELECT DISTINCT id FROM Comments WHERE body LIKE "%%%s%%" ORDER BY ups DESC LIMIT 50) GROUP BY postid, commentid LIMIT 50' % (text, text, text)
+	images = db.select('urlid, albumid, postid, commentid', 'Images', query_text)
+	for (urlid, albumid, postid, commentid) in images:
+		# Get image's URL, dimensions & size
+		if commentid != 0:
+			# Comment
+			comment_dict = build_comment(commentid, urlid)
+			comments.append(comment_dict)
+		else:
+			# Post
+			post_dict = build_post(postid, urlid)
+			posts.append(post_dict)
+			
+			#related_dict = build_related_comment(postid, urlid)
+			#related.append(related_dict)
+	posts    = sort_by_ranking(posts)
+	comments = sort_by_ranking(comments)
+	print json.dumps( {
+			'url'      : 'text:%s' % text,
+			'posts'    : posts,
+			'comments' : comments,
+			'related'  : related
+		} )
 
 
 ###################
@@ -236,17 +363,21 @@ def get_keys():
 	keys = {}
 	for key in form.keys():
 		keys[key] = form[key].value
-	if len(keys) == 0:
-		keys = { 'url' : argv[1] }
+	if len(keys) == 0 and len(argv) > 2:
+		keys = { argv[1] : argv[2] }
 	return keys
 
 def sort_by_ranking(objs):
 	""" Sorts list of posts/comments based on heuristic. """
 	for obj in objs:
 		if 'comments' in obj:
-			obj['ranking'] = int(obj['comments'])
+			obj['ranking']  = int(obj['comments'])
+			obj['ranking'] += int(obj['ups'])
 		else:
 			obj['ranking'] = int(obj['ups'])
+		if 'url' in obj and 'imgur.com/a/' in obj['url'] \
+				or 'imageurl' in obj and 'imgur.com/a/' in obj['imageurl']:
+			obj['ranking'] += 600
 		if obj['author'] in TRUSTED_AUTHORS:
 			obj['ranking'] += 500
 		if obj['subreddit'] in TRUSTED_SUBREDDITS:
