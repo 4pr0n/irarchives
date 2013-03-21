@@ -83,51 +83,60 @@ a.no_color {
 a.no_color:hover   { color: #ddd; }
 a.no_color:visited { color: #ddd; }
 
-a.title_red {
-	text-decoration: none;
+a.nsfw {
+	font-size: 2.5em;
+	letter-spacing: -0.02em;
+	font-weight: bold;
+}
+.nsfw_red {
 	color: #b00;
+	letter-spacing: -0.05em;
+	padding: 0px;
 	text-shadow:  4px  0px 10px rgba(200, 0, 0, 0.3),
 	              0px  4px 10px rgba(200, 0, 0, 0.3),
 	             -4px  0px 10px rgba(200, 0, 0, 0.3),
 	              0px -4px 10px rgba(200, 0, 0, 0.3);
 }
-.title_red:hover {
+a.nsfw:hover .nsfw_red {
 	color: #f00;
 	text-shadow:  4px  0px 10px rgba(255, 0, 0, 0.3),
 	              0px  4px 10px rgba(255, 0, 0, 0.3),
 	             -4px  0px 10px rgba(255, 0, 0, 0.3),
 	              0px -4px 10px rgba(255, 0, 0, 0.3);
 }
-
-span.title_red {
-	font-size: 2.8em;
-	font-weight: bold;
-	font-family: Helvetica, Arial, Verdana;
-	letter-spacing: -0.05em;
-	padding: 0px;
-}
-
-a.title_white {
-	text-decoration: none;
-	color: #222;
-}
-a.title_white:hover {
-	text-decoration: none;
-}
-span.bracket {
-	font-size: 2.8em;
-	font-weight: bold;
-	font-family: Helvetica, Arial, Verdana;
+.nsfw_bracket {
+	color: #b00;
+	font-size: 1.2em;
 	letter-spacing: -0.15em;
 	position: relative;
-	top: -4px;
+	text-shadow:  4px  0px 10px rgba(200, 0, 0, 0.3),
+	              0px  4px 10px rgba(200, 0, 0, 0.3),
+	             -4px  0px 10px rgba(200, 0, 0, 0.3),
+	              0px -4px 10px rgba(200, 0, 0, 0.3);
 }
-span.title_white {
-	font-size: 2.3em;
-	letter-spacing: -0.05em;
-	font-weight: bold;
+a.nsfw:hover .nsfw_bracket {
+	color: #f00;
+	letter-spacing: -0.15em;
+	text-shadow:  4px  0px 10px rgba(255, 0, 0, 0.3),
+	              0px  4px 10px rgba(255, 0, 0, 0.3),
+	             -4px  0px 10px rgba(255, 0, 0, 0.3),
+	              0px -4px 10px rgba(255, 0, 0, 0.3);
+}
+#nsfw_bracket_left {
+	left: 5px;
+}
+#nsfw_bracket_right {
+	left: -7px;
+}
+.nsfw_white {
+	color: #666;
 	position: relative;
-	top: -5px;
+	top: -2px;
+	padding: 0px;
+	letter-spacing: -0.05em;
+}
+a.nsfw:hover .nsfw_white {
+	color: #999;
 }
 
 table {
