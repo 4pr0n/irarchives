@@ -3,7 +3,7 @@
 # From http://sprunge.us/WcVJ?py
 # All credit goes to original author
 
-from os import path, mkdir, sep
+from os import path, mkdir, sep, remove
 from sys import exit, argv
 from Httpy import Httpy
 
@@ -63,11 +63,13 @@ if __name__ == '__main__':
 		print 'argument required: image file location'
 		exit(1)
 	filename = ' '.join(args)
+	remove_file = False
 	if not path.exists(filename):
 		if '://' in filename:
 			web = Httpy()
 			web.download(filename, 'img.jpg')
 			filename = 'img.jpg'
+			remove_file = True
 		else:
 			print 'file not found: %s' % (filename)
 			exit(1)
@@ -78,3 +80,5 @@ if __name__ == '__main__':
 	print 'Dimensions:\t%dx%d' % (dim[0], dim[1])
 
 	#create_thumb(filename, 1)
+	if remove_file:
+		remove(filename)
