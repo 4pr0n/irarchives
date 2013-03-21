@@ -73,11 +73,11 @@ def get_results_tuple_for_image(url):
 		# Get image's URL, dimensions & size
 		if commentid != 0:
 			# Comment
-			comment_dict = build_comment(commentid, urlid)
+			comment_dict = build_comment(commentid, urlid, albumid)
 			comments.append(comment_dict)
 		else:
 			# Post
-			post_dict = build_post(postid, urlid)
+			post_dict = build_post(postid, urlid, albumid)
 			posts.append(post_dict)
 			
 			#related_dict = build_related_comment(postid, urlid)
@@ -106,6 +106,11 @@ def search_url(url):
 	elif 'reddit.com/user/' in url:
 		search_user(url[url.find('/user/')+6:])
 		return
+	elif 'reddit.com/r/' in url and '/comments/' in url:
+		# Reddit post
+		r = web.get(url)
+		if '"url": "' in r:
+			url = web.between(r, '"url": "', '"')[0]
 	
 	try:
 		(url, posts, comments, related, downloaded) = \
@@ -211,11 +216,11 @@ def search_user(user):
 		# Get image's URL, dimensions & size
 		if commentid != 0:
 			# Comment
-			comment_dict = build_comment(commentid, urlid)
+			comment_dict = build_comment(commentid, urlid, albumid)
 			comments.append(comment_dict)
 		else:
 			# Post
-			post_dict = build_post(postid, urlid)
+			post_dict = build_post(postid, urlid, albumid)
 			posts.append(post_dict)
 			
 			#related_dict = build_related_comment(postid, urlid)
@@ -265,11 +270,11 @@ def search_text(text):
 		# Get image's URL, dimensions & size
 		if commentid != 0:
 			# Comment
-			comment_dict = build_comment(commentid, urlid)
+			comment_dict = build_comment(commentid, urlid, albumid)
 			comments.append(comment_dict)
 		else:
 			# Post
-			post_dict = build_post(postid, urlid)
+			post_dict = build_post(postid, urlid, albumid)
 			posts.append(post_dict)
 			
 			#related_dict = build_related_comment(postid, urlid)
@@ -287,7 +292,7 @@ def search_text(text):
 ###################
 # "Builder" methods
 			
-def build_post(postid, urlid):
+def build_post(postid, urlid, albumid):
 	""" Builds dict containing attributes about a post """
 	item = {} # Dict to return
 	# Thumbnail
@@ -317,9 +322,12 @@ def build_post(postid, urlid):
 			item['height'],   \
 			item['size'])     \
 		= db.select('url, width, height, bytes', 'ImageURLs', 'id = %d' % urlid)[0]
+	# Set URL to be the album (if it's an album)
+	if albumid != 0:
+		item['url'] = db.select("url", "Albums", "id = %d" % albumid)[0][0]
 	return item
 	
-def build_comment(commentid, urlid):
+def build_comment(commentid, urlid, albumid):
 	""" Builds dict containing attributes about a comment """
 	item = {} # Dict to return
 	
@@ -349,6 +357,8 @@ def build_comment(commentid, urlid):
 			item['height'],   \
 			item['size'])     \
 		= db.select('url, width, height, bytes', 'ImageURLs', 'id = %d' % urlid)[0]
+	if albumid != 0:
+		item['url'] = db.select("url", "Albums", "id = %d" % albumid)[0][0]
 	return item
 
 ########################
