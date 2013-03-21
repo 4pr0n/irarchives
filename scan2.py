@@ -463,9 +463,13 @@ def load_list(filename, load_subs=False):
 # Print methods
 # Useful for overwriting one-liners
 def prnt(text):
-	print '\r%s%s' % (text, ' ' * (CONSOLE_WIDTH - len(text))),
+	try:
+		print '\r%s%s' % (text, ' ' * (CONSOLE_WIDTH - len(text))),
+	except: pass
 def prntln(text):
-	print '\r%s%s' % (text, ' ' * (CONSOLE_WIDTH - len(text)))
+	try:
+		print '\r%s%s' % (text, ' ' * (CONSOLE_WIDTH - len(text)))
+	except: pass
 
 if __name__ == '__main__':
 	""" only run when executed (not imported) """

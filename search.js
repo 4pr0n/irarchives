@@ -11,6 +11,7 @@ function statusbar(text) { gebi("status").innerHTML = text; }
 function output(text)          { gebi("output").innerHTML          += text + "<br>"; }
 function output_posts(text)    { gebi("output_posts").innerHTML    = text; }
 function output_comments(text) { gebi("output_comments").innerHTML = text; }
+function output_related(text)  { gebi("output_related").innerHTML  = text; }
 
 // Redirect to the page so the URL changes & we know what image is being searched
 function redirect_search() {
@@ -222,6 +223,28 @@ function handleSearchResponse(responseText) {
 		}
 		result.push('</table>');
 		output_comments(result.join(''));
+	}
+
+	// RELATED COMMENTS
+	for (var i = resp.related.length; i > 0 && resp.related.length; i--) {
+		// Remove comments that don't contain imgur albums
+		if (resp.related[i].body.indexOf('imgur.com/a/') == -1) {
+			resp.related.splice(i, 1);
+		}
+	}
+	if (resp.related.length > 0) {
+		var result = [];
+		result.push('<table border="1" style="border-style: solid; padding: 5px">');
+		var s = (resp.related.length == 1) ? '' : 's';
+		result.push('<tr><td colspan="2" class="search_result_title">' + resp.related.length + ' related comment' + s + '</td></tr>');
+		for (var i in resp['related']) {
+			var related = resp['related'][i];
+			if (related.body.indexOf('imgur.com/a/') >= 0) {
+				result.push(display_comment(related));
+			}
+		}
+		result.push('</table>');
+		output_related(result.join(''));
 	}
 	var url = gebi('url').value.replace(/</g, '').replace(/>/g, '');
 	var out = getExternalSearchLinks(url);

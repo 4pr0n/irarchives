@@ -2,6 +2,7 @@
 
 ######################
 # Standard library   #
+import cgitb; cgitb.enable() # for debugging
 import cgi
 import tempfile
 from os   import path, close, remove
@@ -80,8 +81,7 @@ def get_results_tuple_for_image(url):
 			post_dict = build_post(postid, urlid, albumid)
 			posts.append(post_dict)
 			
-			#related_dict = build_related_comment(postid, urlid)
-			#related.append(related_dict)
+			related += build_related_comments(postid, urlid, albumid)
 	posts    = sort_by_ranking(posts)
 	comments = sort_by_ranking(comments)
 	return (url, posts, comments, related, downloaded)
@@ -256,8 +256,7 @@ def search_user(user):
 			post_dict = build_post(postid, urlid, albumid)
 			posts.append(post_dict)
 			
-			#related_dict = build_related_comment(postid, urlid)
-			#related.append(related_dict)
+			related += build_related_comments(postid, urlid, albumid)
 	posts    = sort_by_ranking(posts)
 	comments = sort_by_ranking(comments)
 	print json.dumps( {
@@ -310,8 +309,7 @@ def search_text(text):
 			post_dict = build_post(postid, urlid, albumid)
 			posts.append(post_dict)
 			
-			#related_dict = build_related_comment(postid, urlid)
-			#related.append(related_dict)
+			related += build_related_comments(postid, urlid, albumid)
 	posts    = sort_by_ranking(posts)
 	comments = sort_by_ranking(comments)
 	print json.dumps( {
@@ -393,6 +391,49 @@ def build_comment(commentid, urlid, albumid):
 	if albumid != 0:
 		item['url'] = db.select("url", "Albums", "id = %d" % albumid)[0][0]
 	return item
+
+def build_related_comments(postid, urlid, albumid):
+	""" Builds dict containing attributes about a comment related to a post"""
+	items = [] # List to return
+	#return items
+	
+	# Get info about post comment is replying to
+	(		postsubreddit, \
+			postpermalink, \
+			posthex)   \
+		= db.select('subreddit, permalink, hexid', 'Posts', 'id = %d' % postid)[0]
+	
+	# Get & iterate over comments
+	for (   comid,      \
+					postid,     \
+					comhexid,   \
+					comauthor,  \
+					combody,    \
+					comups,     \
+					comdowns,   \
+					comcreated) \
+					in db.select('*', 'Comments', 'postid = %d' % postid):
+		item = {
+			# Post-specific attributes
+			'subreddit' : postsubreddit,
+			'permalink' : postpermalink,
+			'postid'    : posthex,
+			# Comment-specific attributes
+			'hexid'   : comhexid,
+			'author'  : comauthor,
+			'body'    : combody,
+			'ups'     : comups,
+			'downs'   : comdowns,
+			'created' : comcreated,
+			'thumb'   : '',
+			# Image-specific attributes (irrelevant)
+			'imageurl': '',
+			'width'   : 0,
+			'height'  : 0,
+			'size'    : 0
+		}
+		items.append(item)
+	return items
 
 ########################
 # Helper methods
