@@ -26,7 +26,7 @@ db = DB('reddit.db') # Access to database
 web = Httpy()        # Web functionality
 # Constants
 TRUSTED_AUTHORS    = ['4_pr0n', 'pervertedbylanguage', 'WakingLife']
-TRUSTED_SUBREDDITS = ['AmateurArchives', 'gonewild', 'pornID', 'tipofmypenis']
+TRUSTED_SUBREDDITS = ['AmateurArchives', 'gonewild', 'pornID', 'tipofmypenis', 'UnrealGirls']
 MAX_ALBUM_SEARCH_DEPTH = 3  # Number of images to download from album
 MAX_ALBUM_SEARCH_TIME  = 10 # Max time to search album in seconds
 
@@ -166,6 +166,7 @@ def search_album(url):
 	time_started     = time()
 	albumids = db.select('id', 'Albums', 'url = "%s"' % url)
 	if len(albumids) > 0:
+		# Album is already indexed
 		albumid = albumids[0][0]
 		query_text  = 'id IN '
 		query_text += '(SELECT DISTINCT urlid FROM Images '
@@ -178,14 +179,21 @@ def search_album(url):
 			try:
 				(imgurl, resposts, rescomments, resrelated, downloaded) = \
 						get_results_tuple_for_image(image_url)
+				'''
+				# Old method; stop after one image returns results
 				posts    += resposts
 				comments += rescomments
 				related  += resrelated
 				if len(posts + comments + related) > 0: break
+				'''
+				# New method: Find as many results as possible, remove dupes
+				merge_results(posts, resposts)
+				merge_results(comments, rescomments)
+				merge_results(related, resrelated)
 			except Exception, e:
-				print str(e)
 				continue
 	else:
+		# Album is not indexed; need to scrape images
 		r = web.get('%s/noscript' % url)
 		links = web.between(r, 'img src="http://i.', '"')
 		if len(links) == 0:
@@ -204,11 +212,16 @@ def search_album(url):
 			try:
 				(imgurl, resposts, rescomments, resrelated, downloaded) = \
 						get_results_tuple_for_image(link)
+				if downloaded: downloaded_count += 1
+				'''
 				posts    += resposts
 				comments += rescomments
 				related  += resrelated
-				if downloaded: downloaded_count += 1
 				if len(posts + comments + related) > 0: break
+				'''
+				merge_results(posts, resposts)
+				merge_results(comments, rescomments)
+				merge_results(related, resrelated)
 			except Exception, e:
 				continue
 	if len(posts + comments + related) == 0:
@@ -221,6 +234,16 @@ def search_album(url):
 			'comments' : comments,
 			'related'  : related
 		} )
+
+def merge_results(source_list, to_add):
+	for target in to_add:
+		should_add = True
+		# Check for duplicates
+		for source in source_list:
+			if target['hexid'] == source['hexid']:
+				should_add = False
+				break
+		if should_add: source_list.append(target)
 
 def search_user(user):
 	""" Returns posts/comments by a reddit user """
