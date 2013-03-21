@@ -11,11 +11,10 @@ import json
 
 ######################
 # Database           #
-from ClientDB import DB
+from DB import DB
 ######################
 # Image hashing      #
-from ImageHash import avhash, dimensions
-from scan2 import get_hashid_and_urlid, db as scan2_db
+from ImageHash import avhash
 ######################
 # Web                #
 from Httpy import Httpy
@@ -50,8 +49,9 @@ def get_results_tuple_for_image(url):
 	url = sanitize_url(url)
 	
 	try:
-		# Using scan2.py's method for retrieving hash
-		(hashid, urlid, downloaded) = get_hashid_and_urlid(url, verbose=False)
+		(hashid, downloaded) = get_hashid(url)
+		if hashid == -1: # No hash matches
+			return (url, [], [], [], downloaded)
 		image_hashes = db.select('hash', 'Hashes', 'id = %d' % hashid)
 		if len(image_hashes) == 0: raise Exception('could not get hash for %s' % url)
 		image_hash = image_hashes[0][0]
@@ -85,6 +85,39 @@ def get_results_tuple_for_image(url):
 	posts    = sort_by_ranking(posts)
 	comments = sort_by_ranking(comments)
 	return (url, posts, comments, related, downloaded)
+
+def get_hashid(url):
+	""" 
+		Retrieves hash ID ('Hashes' table) for image.
+		Returns -1 if the image's hash was not found in the table.
+		Does not modify DB! (read only)
+	"""
+	existing = db.select('hashid', 'ImageURLs', 'url = "%s"' % url)
+	if len(existing) > 0:
+		return (existing[0][0], False)
+	
+	# Download image
+	(file, temp_image) = tempfile.mkstemp(prefix='redditimg', suffix='.jpg')
+	close(file)
+	if not web.download(url, temp_image):
+		raise Exception('unable to download image at %s' % url)
+	
+	# Get image hash
+	try:
+		image_hash = str(avhash(temp_image))
+		try: remove(temp_image)
+		except: pass
+	except Exception, e:
+		# Failed to get hash, delete image & raise exception
+		try: remove(temp_image)
+		except: pass
+		raise e
+	
+	# Get hashid from Hashes table
+	hashids = db.select('id', 'Hashes', 'hash = "%s"' % (image_hash))
+	if len(hashids) == 0:
+		return (-1, True)
+	return (hashids[0][0], True)
 	
 def search_url(url):
 	""" Searches for a single URL, prints results """
@@ -400,6 +433,8 @@ def sanitize_url(url):
 		Throws Exception if unable to find direct image.
 	"""
 	url = url.strip()
+	if '?' in url: url = url[:url.find('?')]
+	if '#' in url: url = url[:url.find('#')]
 	if url == '' or not '.' in url:
 		raise Exception('invalid URL')
 	
