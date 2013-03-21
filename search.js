@@ -79,18 +79,18 @@ function getExternalSearchLinks(url) {
 	out += '<li> <a class="external_link" ';
 	out +=         'href="data:text/html;charset=utf-8, ';
 	out +=                '<html><head><meta http-equiv=\'REFRESH\' content=\'0;url=';
-	out +=         	      'http://images.google.com/searchbyimage?image_url=' + url + '\'></head></html>" ';
+	out +=         	      'http://images.google.com/searchbyimage?image_url=' + url + '\'></head><body><h1>redirecting...</h1></body></html>" ';
 	out +=         'rel="noreferrer">search on google images</a></li>';
 	out += '<li> <a class="external_link" ';
 	out +=         'href="data:text/html;charset=utf-8, ';
 	out +=                '<html><head><meta http-equiv=\'REFRESH\' content=\'0;url=';
-	out +=                'http://www.tineye.com/search?pluginver=bookmark_1.0&url=' + url + '\'></head></html>" ';
+	out +=                'http://www.tineye.com/search?pluginver=bookmark_1.0&url=' + url + '\'></head><body><h1>redirecting...</h1></body></html>" ';
 	out +=         'rel="noreferrer">search on tineye</a></li>';
 	out += '<li> <a class="external_link" ';
 	out +=         'href="data:text/html;charset=utf-8, ';
 	out +=                '<html><head><meta http-equiv=\'REFRESH\' content=\'0;url=';
-	out +=                'http://www.karmadecay.com/' + url.replace(/http:\/\//, '') + '\'></head></html>" ';
-	out +=         'rel="noreferrer">search on karmadecay</a></li>';
+	out +=                'http://www.karmadecay.com/' + url.replace(/http:\/\//, '') + '\'></head><body><h1>redirecting...</h1></body></html>" ';
+		out +=         'rel="noreferrer">search on karmadecay</a></li>';
 	out += '</ul>';
 	out += '</div>';
 	return out;
@@ -103,10 +103,12 @@ function sendSearchRequest(query) {
 	setTimeout( function() {
 		var status = gebi("status");
 		if (status.innerHTML.indexOf('searching...') >= 0) {
-			status.innerHTML += '<br>the site is currently lagging. you can keep waiting or try again later.';
+			status.innerHTML += '<br>some searches may take up to 20 seconds. please be patient.';
 			var url = gebi('url').value.replace(/</g, '').replace(/>/g, '');
-			var out = getExternalSearchLinks(url);
-			status.innerHTML += out;
+			if (url.indexOf('text:') == -1 && url.indexOf('user:') == -1 && url.indexOf('cache:') == -1) {
+				var out = getExternalSearchLinks(url);
+				status.innerHTML += out;
+			}
 		}  
 	}, 5000);
 	gebi("output").innerHTML = '';
@@ -145,22 +147,24 @@ function handleSearchResponse(responseText) {
 		gebi('url').value = resp['url']
 	}
 	if (resp['images'] != null) {
-		// Image results for album
+		// Image results for (cached) album
 		var out = '<center><table>';
 		out += '<tr><td colspan="5" class="search_result_title">' + resp.images.length + ' album images</td></tr>';
 		out += '<tr>';
 		for (var i = 0; i < resp.images.length; i++) {
 			var url = resp.images[i].url;
 			var thumb = '';
-			if (true || resp.images[i].thumb == null) {
+			var USE_IMGUR_BY_DEFAULT = true;
+			if (USE_IMGUR_BY_DEFAULT || resp.images[i].thumb == null) {
 				var tempi = url.lastIndexOf('.');
 				thumb = url.substr(0, tempi) + 's' + url.substr(tempi);
 			} else {
 				thumb = resp.images[i].thumb;
+				console.log(thumb);
 			}
 			out += '<td align="center" valign="center" style="text-align: center; vertical-align: center;">';
 			out += '<a href="' + url + '">';
-			out += '<img src="' + thumb + '">';
+			out += '<img style="width: 90px; height: 90px;" src="' + thumb + '">';
 			out += '</a>';
 			//out += resp.images[i];
 			out += '</td>';
@@ -182,20 +186,11 @@ function handleSearchResponse(responseText) {
 		statusbar('');
 		return;
 	}
-	if (resp.posts.length == 0 && resp.comments.length == 0) {
-		// No results, show alternatives
-		statusbar('<span class="search_count_empty">no results</span>');
-		
-		var url = gebi('url').value.replace(/</g, '').replace(/>/g, '');
-		if (document.location.href.indexOf('?user=') == -1) {
-			var out = getExternalSearchLinks(url);
-			output(out);
-		} else {
-			output('<br>');
-		}
-		return;
-	}
 	statusbar('');
+	if (resp.posts.length == 0 && resp.comments.length == 0) {
+		// No results
+		statusbar('<span class="search_count_empty">no results</span>');
+	}
 	
 	// POSTS
 	if (resp.posts.length > 0) {
@@ -226,7 +221,7 @@ function handleSearchResponse(responseText) {
 	}
 
 	// RELATED COMMENTS
-	for (var i = resp.related.length; i > 0 && resp.related.length; i--) {
+	for (var i = resp.related.length - 1; i >= 0 && resp.related.length; i--) {
 		// Remove comments that don't contain imgur albums
 		if (resp.related[i].body.indexOf('imgur.com/a/') == -1) {
 			resp.related.splice(i, 1);
@@ -237,18 +232,19 @@ function handleSearchResponse(responseText) {
 		result.push('<table border="1" style="border-style: solid; padding: 5px">');
 		var s = (resp.related.length == 1) ? '' : 's';
 		result.push('<tr><td colspan="2" class="search_result_title">' + resp.related.length + ' related comment' + s + '</td></tr>');
-		for (var i in resp['related']) {
-			var related = resp['related'][i];
-			if (related.body.indexOf('imgur.com/a/') >= 0) {
-				result.push(display_comment(related));
-			}
+		for (var i in resp.related) {
+			var related = resp.related[i];
+			result.push(display_comment(related));
 		}
 		result.push('</table>');
 		output_related(result.join(''));
 	}
 	var url = gebi('url').value.replace(/</g, '').replace(/>/g, '');
-	var out = getExternalSearchLinks(url);
-	output(out);
+	if (url.indexOf('text:') == -1 && url.indexOf('user:') == -1 && url.indexOf('cache:') == -1) {
+		var out = getExternalSearchLinks(url);
+		output(out);
+	}
+
 }
 
 function display_post(post) {
@@ -283,7 +279,7 @@ function display_post(post) {
 	txt +=   '<tr><td class="result_info"><span class="result_date" style="padding-right: 5px;">';
 	txt +=     '(<span class="post_ups">' + ups + '</span>|<span class="post_downs">' + downs + '</span>)</span> ';
 	txt +=     ' submitted <span class="result_date" title="' + date.toUTCString() + '">' + get_time(created) + '</span>';
-	txt +=     ' by <a class="post_author" href="?user=' + author + '">' + author + '</a>';
+	txt +=     ' by <a class="post_author" href="?url=user:' + author + '">' + author + '</a>';
 	txt +=     ' to <a class="post_author" href="http://www.reddit.com/r/' + subreddit + '">' + subreddit + '</a>';
 	txt +=   '</td><tr>'
 	txt +=   '<tr><td class="result_info">';
@@ -329,7 +325,7 @@ function display_comment(comment) {
 	txt += '</td><td valign="top" style="border: 0px; padding-top: 0px;">';
 	txt += '<table class="invisible" style="max-width: 600px;">';
 	txt +=   '<tr><td class="result_comment_info">';
-	txt +=     '<a class="comment_author" href="?user=' + author + '">' + author + '</a> ';
+	txt +=     '<a class="comment_author" href="?url=user:' + author + '">' + author + '</a> ';
 	txt +=     score + ' point';
 	if (score != 1) { txt += 's'; }
 	txt +=     ' <span class="result_date" title="' + date.toUTCString() + '">' + get_time(created) + '';
@@ -497,10 +493,8 @@ function checkURL() {
 		return true;
 	} else if (query.indexOf('?user=') >= 0) {
 		var user = query.substring(query.indexOf('?user=') + 6);
-		gebi("url").value = '';
-		gebi("user").value = user;
-		gebi("user_row").style.display = 'table-row';
-		user_click();
+		gebi("url").value = 'user:' + user;
+		search_click();
 		return true;
 	}
 	return false;
