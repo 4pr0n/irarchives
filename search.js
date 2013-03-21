@@ -23,11 +23,11 @@ function redirect_search() {
 function search_click() {
 	var url = gebi("url").value;
 	// Handle modifiers
-	if (url.startsWith('text:')) {
+	if (url.indexOf('text:') == 0) {
 		sendSearchRequest('search2.cgi?text=' + url.substr(5));
-	} else if (url.startsWith('cache:')) {
+	} else if (url.indexOf('cache:') == 0) {
 		sendSearchRequest('search2.cgi?cache=' + url.substr(6));
-	} else if (url.startsWith('user:')) {
+	} else if (url.indexOf('user:') == 0) {
 		sendSearchRequest('search2.cgi?user=' + url.substr(5));
 	} else if (url.indexOf('.') == -1) {
 		// No period, assume username
@@ -198,7 +198,7 @@ function handleSearchResponse(responseText) {
 	
 	// POSTS
 	if (resp.posts.length > 0) {
-		result = [];
+		var result = [];
 		result.push('<table border="1" style="border-style: solid; padding: 5px; width: 100%">');
 		var s = (resp.posts.length == 1) ? '' : 's';
 		result.push('<tr><td colspan="2" class="search_result_title">' + resp.posts.length + ' post' + s + '</td></tr>');
@@ -212,7 +212,7 @@ function handleSearchResponse(responseText) {
 	
 	// COMMENTS
 	if (resp.comments.length > 0) {
-		result = []
+		var result = [];
 		result.push('<table border="1" style="border-style: solid; padding: 5px">');
 		var s = (resp.comments.length == 1) ? '' : 's';
 		result.push('<tr><td colspan="2" class="search_result_title">' + resp.comments.length + ' comment' + s + '</td></tr>');
@@ -233,7 +233,7 @@ function display_post(post) {
 	var url = post.url; var score = post.score; var ups = post.ups; var downs = post.downs;
 	var title = post.title; var permalink = post.permalink; var created = post.created; 
 	var author = post.author; var thumb = post.thumb; var subreddit = post.subreddit; 
-	var comments = post.comments; var width = post.width; height = post.height; size = post.size;
+	var comments = post.comments; var width = post.width; var height = post.height; var size = post.size;
 	var imageurl = post.imageurl;
 	var date = new Date(0);
 	date.setUTCSeconds(created);
@@ -254,7 +254,7 @@ function display_post(post) {
 	txt += '<table class="invisible">';
 	txt +=   '<tr><td><a class="result_link" href="http://reddit.com' + permalink + '">' + title + '</a>';
 	if (url.indexOf('imgur.com/a/') >= 0) {
-		txt += '<span class="post_domain">&nbsp;(album)</span>';
+		txt += '<span class="post_domain">&nbsp;(album - <a href="javascript:document.location.href = document.location.pathname + \'?url=cache:' + url + '\';">cached</a>)</span>';
 	}
 	txt += '</td></tr>';
 	txt +=   '<tr><td class="result_info"><span class="result_date" style="padding-right: 5px;">';
@@ -286,8 +286,8 @@ function display_comment(comment) {
 	var score = comment.ups - comment.downs;
 	var hexid = comment.hexid; var postid = comment.postid;
 	var created = comment.created; var author = comment.author;
-	var body = comment.body, imageurl = comment.imageurl;
-	var width = comment.width; height = comment.height; size = comment.size;
+	var body = comment.body; var imageurl = comment.imageurl;
+	var width = comment.width; var height = comment.height; var size = comment.size;
 	var date = new Date(0);
 	date.setUTCSeconds(created);
 	if (comment.url != null) {
@@ -304,7 +304,7 @@ function display_comment(comment) {
 	txt +=   '</tr>';
 	txt += '</table>';
 	txt += '</td><td valign="top" style="border: 0px; padding-top: 0px;">';
-	txt += '<table class="invisible">';
+	txt += '<table class="invisible" style="max-width: 600px;">';
 	txt +=   '<tr><td class="result_comment_info">';
 	txt +=     '<a class="comment_author" href="?user=' + author + '">' + author + '</a> ';
 	txt +=     score + ' point';
