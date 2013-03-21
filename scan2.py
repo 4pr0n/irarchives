@@ -161,7 +161,7 @@ def parse_subreddit(subreddit, timeframe):
 		else:
 			# No more pages to load
 			return
-		if posts == None:
+		if posts == None or len(posts) == 0:
 			print '      [!] no posts found'
 			return
 		total_post_count += len(posts)
