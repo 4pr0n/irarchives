@@ -238,6 +238,12 @@ td.search_status_result {
 	font-size: 1.5em;
 }
 
+.search_count_subtext {
+	color: #f00;
+	font-weight: bold;
+	font-size: 1.2em;
+}
+
 a.external_link {
 	font-size: 1.1em;
 	font-weight: bold;

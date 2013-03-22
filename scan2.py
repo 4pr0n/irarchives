@@ -149,6 +149,8 @@ def parse_subreddit(subreddit, timeframe):
 	total_post_count   = 0
 	current_post_index = 0
 	while True:
+		# Check if there are pending albums to be indexed
+		check_and_drain_queue()
 		query_text = '/r/%s/top?t=%s' % (subreddit, timeframe)
 		if total_post_count == 0:
 			prntln('      [+] loading first page of %s' % query_text)
@@ -172,6 +174,7 @@ def parse_subreddit(subreddit, timeframe):
 			stdout.flush()
 			if parse_post(post): # Returns True if we made a request to reddit
 				time.sleep(2) # Sleep to stay within rate limit
+		
 		time.sleep(2)
 	
 def parse_post(post):
@@ -275,6 +278,7 @@ def parse_url(url, postid=0, commentid=0):
 	""" Gets image hash(es) from URL, populates database """
 	while url.endswith('/'): url = url[:-1]
 	if 'imgur.com' in url:
+		if '?' in url: url = url[:url.find('?')]
 		if '.com/a/' in url:
 			# Album
 			print ''
@@ -353,7 +357,10 @@ def parse_image(url, postid=0, commentid=0, albumid=0):
 		print '\n      [!] failed to calculate hash for %s' % url
 		print '      [!] Exception: %s' % str(e)
 		return False
-	imageid = db.insert('Images', (urlid, hashid, albumid, postid, commentid))
+	# 'Images' table is used for linking reddit posts/comments to images
+	# If there is no post/comment, don't bother linking
+	if postid != 0 and commentid != 0:
+		imageid = db.insert('Images', (urlid, hashid, albumid, postid, commentid))
 	return True
 
 
@@ -458,6 +465,26 @@ def load_list(filename, load_subs=False):
 	if len(result) == 0 and load_subs:
 		return save_subs(filename)
 	return result
+
+def check_and_drain_queue():
+	""" 
+		Indexes & empties file containing list of URLs to index
+		File is populated via front-end requests.
+	"""
+	if not path.exists('index_queue.lst'): return
+	f = open('index_queue.lst', 'r')
+	queue_lines = f.read()
+	f.close()
+	remove('index_queue.lst')
+	queue = queue_lines.split('\n')
+	while queue.count('') > 0: queue.remove('')
+	if len(queue) == 0: return
+	queue = list(set(queue)) # remove duplicates
+	print '\n      [!] found %d images to index' % len(queue)
+	for url in queue:
+		url = url.strip()
+		if url == '': continue
+		parse_url(url)
 
 ##################
 # Print methods

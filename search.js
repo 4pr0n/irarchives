@@ -191,6 +191,14 @@ function handleSearchResponse(responseText) {
 		// No results
 		statusbar('<span class="search_count_empty">no results</span>');
 	}
+	if (resp.checked != null && resp.total != null) {
+		// Album search; number of results
+		var stat = gebi('status');
+		if (stat.innerHTML !== '') {
+			stat.innerHTML += '<br><br>';
+		}
+		stat.innerHTML += '<span class="search_count_subtext">searched ' + resp.checked + ' of ' + resp.total + ' images</span>';
+	}
 	
 	// POSTS
 	if (resp.posts.length > 0) {
@@ -240,7 +248,7 @@ function handleSearchResponse(responseText) {
 		output_related(result.join(''));
 	}
 	var url = gebi('url').value.replace(/</g, '').replace(/>/g, '');
-	if (url.indexOf('text:') == -1 && url.indexOf('user:') == -1 && url.indexOf('cache:') == -1) {
+	if (url.indexOf('imgur.com/a/') == -1 && url.indexOf('text:') == -1 && url.indexOf('user:') == -1 && url.indexOf('cache:') == -1) {
 		var out = getExternalSearchLinks(url);
 		output(out);
 	}

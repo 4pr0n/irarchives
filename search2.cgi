@@ -159,6 +159,12 @@ def search_url(url):
 		} )
 	
 def search_album(url):
+	url = url.replace('http://', '').replace('https://', '')
+	while url.endswith('/'): url = url[:-1]
+	while url.count('/') > 2: url = url[:url.rfind('/')]
+	if '?' in url: url = url[:url.find('?')]
+	if '#' in url: url = url[:url.find('#')]
+	url = 'http://%s' % url # How the URL will be stored in the DB
 	posts    = []
 	comments = []
 	related  = []
@@ -179,14 +185,6 @@ def search_album(url):
 			try:
 				(imgurl, resposts, rescomments, resrelated, downloaded) = \
 						get_results_tuple_for_image(image_url)
-				'''
-				# Old method; stop after one image returns results
-				posts    += resposts
-				comments += rescomments
-				related  += resrelated
-				if len(posts + comments + related) > 0: break
-				'''
-				# New method: Find as many results as possible, remove dupes
 				merge_results(posts, resposts)
 				merge_results(comments, rescomments)
 				merge_results(related, resrelated)
@@ -195,13 +193,13 @@ def search_album(url):
 	else:
 		# Album is not indexed; need to scrape images
 		r = web.get('%s/noscript' % url)
-		links = web.between(r, 'img src="http://i.', '"')
-		if len(links) == 0:
+		image_urls = web.between(r, 'img src="http://i.', '"')
+		if len(image_urls) == 0:
 			print_error('empty imgur album (404?)')
 			return
 		# Search stats
 		downloaded_count = 0
-		for link in links:
+		for link in image_urls:
 			if downloaded_count >= MAX_ALBUM_SEARCH_DEPTH: break
 			if time() - time_started > MAX_ALBUM_SEARCH_TIME: break
 			link = 'http://i.%s' % link
@@ -213,23 +211,25 @@ def search_album(url):
 				(imgurl, resposts, rescomments, resrelated, downloaded) = \
 						get_results_tuple_for_image(link)
 				if downloaded: downloaded_count += 1
-				'''
-				posts    += resposts
-				comments += rescomments
-				related  += resrelated
-				if len(posts + comments + related) > 0: break
-				'''
 				merge_results(posts, resposts)
 				merge_results(comments, rescomments)
 				merge_results(related, resrelated)
 			except Exception, e:
 				continue
-	if len(posts + comments + related) == 0:
-		print_error('searched %d images from album; no results found' % checked_count)
-		return
+		# Add album images to queue, to be parsed by backend scraper
+		f = open('index_queue.lst', 'a')
+		f.write('http://i.%s\n' % '\nhttp://i.'.join(image_urls))
+		f.flush()
+		f.close()
+	#if len(posts + comments + related) == 0:
+	#	print_error('searched %d images from album; no results found' % checked_count)
+	#	return
 
 	print json.dumps( {
 			'url'      : url,
+			'checked'  : checked_count,
+			'total'    : len(image_urls),
+			'cached'   : len(albumids) > 0,
 			'posts'    : posts,
 			'comments' : comments,
 			'related'  : related
