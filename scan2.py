@@ -472,10 +472,15 @@ def check_and_drain_queue():
 		File is populated via front-end requests.
 	"""
 	if not path.exists('index_queue.lst'): return
+	# Read URLs
 	f = open('index_queue.lst', 'r')
 	queue_lines = f.read()
 	f.close()
-	remove('index_queue.lst')
+	# Delete
+	#remove('index_queue.lst')
+	f = open('index_queue.lst', 'w')
+	f.write('')
+	f.close()
 	queue = queue_lines.split('\n')
 	while queue.count('') > 0: queue.remove('')
 	if len(queue) == 0: return
