@@ -105,7 +105,7 @@ function sendSearchRequest(query) {
 		if (status.innerHTML.indexOf('searching...') >= 0) {
 			status.innerHTML += '<br>some searches may take up to 20 seconds. please be patient.';
 			var url = gebi('url').value.replace(/</g, '').replace(/>/g, '');
-			if (url.indexOf('text:') == -1 && url.indexOf('user:') == -1 && url.indexOf('cache:') == -1) {
+			if (url.indexOf('imgur.com/a/') == -1 && url.indexOf('text:') == -1 && url.indexOf('user:') == -1 && url.indexOf('cache:') == -1) {
 				var out = getExternalSearchLinks(url);
 				status.innerHTML += out;
 			}
@@ -198,6 +198,9 @@ function handleSearchResponse(responseText) {
 			stat.innerHTML += '<br><br>';
 		}
 		stat.innerHTML += '<span class="search_count_subtext">searched ' + resp.checked + ' of ' + resp.total + ' images</span>';
+		if (resp.cached) {
+			stat.innerHTML += ' <span class="search_count_subtext"><a class="external_link" href="?url=cache:' + gebi('url').value + '">(cached)</a></span>';
+		}
 	}
 	
 	// POSTS

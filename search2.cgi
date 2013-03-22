@@ -195,7 +195,7 @@ def search_album(url):
 		r = web.get('%s/noscript' % url)
 		image_urls = web.between(r, 'img src="http://i.', '"')
 		if len(image_urls) == 0:
-			print_error('empty imgur album<br><a class="external_link" style="text-decoration: underline; font-size: 0.8em;" href="?url=cache:%s">check for cached copy</a>' % url)
+			print_error('empty imgur album (404?)')
 			return
 		# Search stats
 		downloaded_count = 0
