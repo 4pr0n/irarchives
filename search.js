@@ -25,20 +25,20 @@ function search_click() {
 	var url = gebi("url").value;
 	// Handle modifiers
 	if (url.indexOf('text:') == 0) {
-		sendSearchRequest('search2.cgi?text=' + url.substr(5));
+		sendSearchRequest('search.cgi?text=' + url.substr(5));
 	} else if (url.indexOf('cache:') == 0) {
-		sendSearchRequest('search2.cgi?cache=' + url.substr(6));
+		sendSearchRequest('search.cgi?cache=' + url.substr(6));
 	} else if (url.indexOf('user:') == 0) {
-		sendSearchRequest('search2.cgi?user=' + url.substr(5));
+		sendSearchRequest('search.cgi?user=' + url.substr(5));
 	} else if (url.indexOf('.') == -1) {
 		// No period, assume username
-		sendSearchRequest('search2.cgi?user=' + url);
+		sendSearchRequest('search.cgi?user=' + url);
 	} else {
 		// Assume URL search
 		if (url.indexOf('://') == -1) {
 			url = 'http://' + url;
 		}
-		sendSearchRequest('search2.cgi?url=' + url);
+		sendSearchRequest('search.cgi?url=' + url);
 		gebi('url').blur();
 	}
 }
@@ -50,7 +50,7 @@ function redirect_user() {
 
 function user_click() {
 	var user = gebi("user");
-	sendSearchRequest('search2.cgi?user=' + user.value);
+	sendSearchRequest('search.cgi?user=' + user.value);
 	user.blur();
 }
 

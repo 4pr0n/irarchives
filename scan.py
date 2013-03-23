@@ -1,48 +1,35 @@
 #!/usr/bin/python
 
-"""
-	scan.py
-	
+'''
 	What this script does:
-		1. Scans reddit.com for new posts/comments
-		2. Retrieves images from posts/comments
+		1. Scans reddit.com subreddits for new posts/comments
+		2. Retrieves images from day-old posts/comments
 		3. Stores image information (hash, size, etc) in a database
-		4. If post/comment contains image, stores post/comment info in database
-	
-	TODO
-		* Get more sleep; don't program when tired.
-	
-	(LOW PRIORITY)
-		* min.us support, tumblr support, postimage? (check domain on reddit for relevancy)
-		
-		* Multithreading for image hashing?
-		... SQLite 3.x allows multithreading in python. We shouldn't upgrade b/c web server is outdated as hell
-		... DB can only be connected/written/committed from a single thread.
-		... Possible solution: Create separate lists for Images, ImageURLs, Hashes, Comments
-		... ... These lists would contain Tuples to be inserted into the respective Tables
-		... ... Main thread would read these lists and insert tuples into appropriate Table
-		... **** QUESTION: How would the worker threads check for duplicates; and how would Image table know the Post/Comment's ID?
-		... **** ANSWER:   THIS IS IMPOSSIBLE USING THE CURRENT PROGRAM STRUCTURE. single-threaded ftl ;\
-"""
+		4. If post/comment contains image/link, stores post/comment info in database
+'''
 
+##############################
+# Standard libraries
 from os import path, close, remove
 from sys import exit, stdout
+import time, tempfile
+##############################
+# Reddit
+import ReddiWrap
+reddit = ReddiWrap.ReddiWrap()
+##############################
+# Image hash
+from ImageHash import avhash, dimensions, create_thumb
+##############################
+# WEB
+from Httpy import Httpy
+web = Httpy()
+##############################
+# Database
+from DB import DB
 
-# Reddit username/password contained in text file, separated by new line characters
-if not path.exists('login_credentials.txt'):
-	print 'need login credentials (username and password, separated by new line) in text file login_credentials.txt'
-	exit(1)
-login_file = open('login_credentials.txt')
-login_list = login_file.read().split('\n')
-login_file.close()
-if len(login_list) < 2:
-	print 'need login credentials (username and password, separated by new line) in text file login_credentials.txt'
-	exit(1)
-REDDIT_USER     = login_list[0]
-REDDIT_PASSWORD = login_list[1]
-
-
-# Database schema
+#################
+# Globals
 SCHEMA = {
 		'Posts' : 
 			'\n\t' +
@@ -108,203 +95,172 @@ SCHEMA = {
 			'FOREIGN KEY(commentid) REFERENCES Comments(id),  \n\t' +
 			'PRIMARY KEY(urlid, postid, commentid)' # Prevent a post or comment from having more than two of the same exact image
 	}
-
-# For keeping track of what recent posts we have already checked
-from DB import DB
 db = DB('reddit.db', **SCHEMA)
 
-# For calculating image hash, retrieving dimensions, and creating thumbnails (uses PIL)
-from ImageHash import avhash, dimensions, create_thumb
-
-import time, tempfile
-
-# Library for interacting with web servers, requesting files, etc
-from Web import Web
-web = Web()
-
-# Library for interacting with reddit.com
-from ReddiWrap import ReddiWrap
-reddit = ReddiWrap()
+CONSOLE_WIDTH = 150 # With of console (number of characters across)
 
 
-def get_image_hash(url, postid=0, comment=None, albumid=0):
-	""" Gets hash for image based on 'url'. Adds to Hashes and Images tables. """
-	# Check that we haven't already grabbed this URL
-	url = url.replace("'", "%27")
-	url = url.replace('"', "%22")
-	
-	if '?' in url: url = url[:url.find('?')]
-	if '#' in url: url = url[:url.find('#')]
-	
-	# Get file extension
-	if not '.' in url: return
-	ext = url.lower()[url.rfind('.') + 1:]
-	
-	if ext.endswith('jpg') or ext.endswith('jpeg') or ext.endswith('gif') or ext.endswith('png'):
-		# If it's a direct link to a image, then we already have the URL
-		# The app locks up on FBCND (facebook) requests. Ignore these
-		if url.startswith('https://fbcdn'): return
-		if 'http://imgur.com' in url:
-			url = url.replace('http://imgur.com', 'http://i.imgur.com')
-		
-	elif 'imgur.com'         in url:
-		# It's an imgur link
-		if '.imgur.com'        in url and \
-			 not 'i.imgur.com'   in url and \
-			 not 'www.imgur.com' in url or  \
-			 'imgur.com/a/'      in url:
-			# It's an imgur album, Retrieve each image using recursively calls
-			get_album_hashes(url, postid=postid, comment=comment)
-			return
-		
-		# Single image, need to get direct link to image (imgur.com/ASDF1 to i.imgur.com/ASDF1.jpg)
-		r = web.get(url)
-		urls = web.between(r, '<link rel="image_src" href="', '"')
-		if len(urls) == 0: return
-		url = urls[0].strip()
-		url = url.replace('http://imgur.com', 'http://i.imgur.com')
-		ext = url.lower()[url.rfind('.') + 1:]
-		
-	elif 'postimage.org' in url and '/gallery/' in url:
-		# Postimage gallery
-		get_postimage_hashes(url, postid=postid, comment=comment)
-		return
-		
-	else:
-		# Non-hotlinked, non-imgur webpage; skip it
-		return
-	
-	# Check if we have already calculated this image's hash/info
-	found = db.select('id, hashid', 'ImageURLs', "url = '%s'" % (url))
-	if len(found) > 0:
-		# Image URL already stored; get IDs of image
-		urlid  = found[0][0]
-		hashid = found[0][1]
-	else:
-		# Download & Calculate hash for image
-		if '?' in ext: ext = ext[:ext.find('?')]
-		if '/' in ext: ext = ext[:ext.find('/')]
-		(file, temp_image) = tempfile.mkstemp(prefix='redditimg', suffix='.'+ext)
-		close(file)
-		print 'downloading %s' % (url)
-		stdout.flush()
-		if not web.download(url, temp_image): return
-		
-		# Calculate hash of downloaded jmage
-		try:                hash = str(avhash(temp_image))
-		except IOError:     hash = ''
-		except IndexError:  hash = ''
-		except MemoryError: hash = ''
-		
-		# We must have a hash to add image to database
-		if hash == '': 
-			try:            remove(temp_image) # Delete the temporary file
-			except OSError: pass
-			return
-		
-		# Insert image hash into Hashes table
-		hashid = db.insert('Hashes', (None, hash))
-		if hashid == -1: 
-			# If hash already exists, find it
-			#print "Hash already exists: %s" % hash
-			hashids = db.select('id', 'Hashes', 'hash = "%s"' % (hash))
-			if len(hashids) == 0:
-				print "Could not find hash id! (WTF!!!)"
-				try: remove(temp_image)
-				except OSError: pass
-				return
-			hashid = hashids[0][0]
-		
-		# Calculate width/height for image
-		(width, height) = dimensions(temp_image)
-		# Calculate filesize (in bytes)
-		filesize = path.getsize(temp_image)
-		# Insert into ImageURLs table
-		urlid = db.insert('ImageURLs', (None, url, hashid, width, height, filesize))
-		# Create thumbnail, using ImageURLs ID for index
-		create_thumb(temp_image, urlid)
-		
-		remove(temp_image) # Delete the temp file (image)
-	
-	# Insert comment into database if needed... ONLY if an image hash is found
-	if comment != None:
-		commentid = db.insert('Comments', (None, postid, comment.id, comment.author, comment.body, comment.upvotes, comment.downvotes, comment.created_utc))
-		if commentid == -1:
-			# Comment already exists; Find it. This happens if a comment contains multiple image links
-			commentid = db.select('id', 'Comments', "hexid = '%s'" % comment.id)[0][0]
-	else:
-		commentid = 0 # Not a comment
-	
-	# Insert image into Images tables
-	imageid = db.insert('Images', (urlid, hashid, albumid, postid, commentid))
-	db.commit()
-
-
-def get_postimage_hashes(url, postid=0, comment=None):
-	url = url.replace('https://', '')
-	if not url.startswith('http://'): url = 'http://' + url
-	if url.find('#') != -1: url = url[:url.find('#')]
-	if url.endswith('/'): url = url[:-1]
-	
-	# Insert into Albums, get ID, if exists: return
-	albumid = db.insert('Albums', (None, url))
-	db.commit()
-	if albumid == -1:
-		albumids = db.select('id', 'Albums', 'url = "%s"' % urldb)
-		if len(albumids) == 0: return
-		albumid = albumids[0][0]
-	
-	r = web.get(url)
-	
-	chunks = web.between(r, "<table class='gallery'", "</table>")
-	if len(chunks) == 0: return
-	chunk = chunks[0]
-	
-	pics = web.between(chunk, "<a href='", "'")
-	for pic in pics:
-		u = pic
-		r = web.get(pic)
-		imgs = web.between(r, "<img src='", "'")
-		if len(imgs) == 0: continue
-		get_image_hash(imgs[0], postid=postid, comment=comment, albumid=albumid)
-
-def get_album_hashes(url, postid=0, comment=None):
-	""" Receives imgur album URL, calls get_image_hash for each image in album """
-	url = url.replace('https://', '')
-	if not url.startswith('http://'): url = 'http://' + url
-	if url.find('#') != -1: url = url[:url.find('#')]
-	if url.endswith('/'): url = url[:-1]
-	
-	# Insert into Albums, get ID, if exists: return
-	albumid = db.insert('Albums', (None, url))
-	db.commit()
-	if albumid == -1: return
-	
-	r = web.get(url + '/noscript')
-	
-	pics = web.between(r, '<img src="http://i.imgur.com/', '"')
-	for pic in pics:
-		u = pic
-		#if len(u) == len('dpugoh.jpg'):  u = u[:5] + u[6:]
-		#if len(u) == len('dpugoh.jpeg'): u = u[:6] + u[7:]
-		i = u.find('.')
-		#if u[i-1] == 'h' and i >= 6: u = u[:i-1] + u[i:]
-		if u[i-1] == 'h':
-			newurl = u[:i-1] + u[i:]
-			m = web.get_meta('http://i.imgur.com/' + newurl)
-			if 'ETag' in m:
-				u = newurl
-			
-		get_image_hash('http://i.imgur.com/' + u, postid=postid, comment=comment, albumid=albumid)
-
-
-def get_images_from_body(body, postid=0, comment=None):
-	""" Parses all http links from body, forwards URL to 'get_image_hash()' """
-	i = -1
+def main():
+	""" 
+		Main loop of program. 
+		Infinitely iterates over the list of subreddits
+	"""
+	# Login to reddit acct or die
+	if not login(): return 
 	while True:
-		i = body.find('http://', i + 1)
+		# Subreddits are added to "subs_all.txt", "subs_month.txt", and
+		# "subs_week.txt", and "subs.txt" (master list).
+		# These lists tell the script which top?t=timeperiod to grab
+		# After grabbing the top from all/month, the script continues to
+		# check the subreddit's top weekly posts
+		for timeframe in ['all', 'month', 'week']:
+			if timeframe == 'week':
+				# Load subreddits to check the top?t=week of, or load
+				# all subs from the masterlist if found to be empty.
+				subreddits = load_list('subs_%s.txt' % timeframe, load_subs=True)
+			else:
+				# Only load subs from all/month, don't load more if the
+				# lists are found to be empty
+				subreddits = load_list('subs_%s.txt' % timeframe)
+			while len(subreddits) > 0:
+				# Grab all images/comments from sub, remove from list
+				parse_subreddit(subreddits.pop(0), timeframe)
+				# Save current list in case script needs to be restarted
+				save_list(subreddits, 'subs_%s.txt' % timeframe)
+				time.sleep(2)
+
+def login():
+	""" Logs into reddit. Returns false if it can't """
+	if path.exists('login_credentials.txt'):
+		login_file = open('login_credentials.txt')
+		login_list = login_file.read().split('\n')
+		login_file.close()
+		if len(login_list) >= 2:
+			user     = login_list[0]
+			password = login_list[1]
+			print '      [+] logging in to %s...' % user,
+			stdout.flush()
+			result = reddit.login(user=user, password=password)
+			if result == 0:
+				print 'success'
+				return True
+			else:
+				print 'failed (status code %d)' % result
+				return False
+	print '\n      [!] unable to find/validate user/pass'
+	print '          credentials need to be in login_credentials.txt'
+	print '          expecting: username and password separated by new lines'
+	return False
+
+def parse_subreddit(subreddit, timeframe):
+	""" Parses top 1,000 posts from subreddit within timeframe. """
+	total_post_count   = 0
+	current_post_index = 0
+	while True:
+		# Check if there are pending albums to be indexed
+		check_and_drain_queue()
+		query_text = '/r/%s/top?t=%s' % (subreddit, timeframe)
+		if total_post_count == 0:
+			prntln('      [+] loading first page of %s' % query_text)
+			stdout.flush()
+			posts = reddit.get(query_text)
+		elif reddit.has_next():
+			prnt('      [+] loading  next page of %s' % query_text)
+			stdout.flush()
+			posts = reddit.get_next()
+		else:
+			# No more pages to load
+			return
+		if posts == None or len(posts) == 0:
+			print '      [!] no posts found'
+			return
+		total_post_count += len(posts)
+		for post in posts:
+			current_post_index += 1
+			prnt('[%3d/%3d] scraping http://redd.it/%s %s' % \
+					(current_post_index, total_post_count, post.id, post.url))
+			stdout.flush()
+			if parse_post(post): # Returns True if we made a request to reddit
+				time.sleep(2) # Sleep to stay within rate limit
+		
+		time.sleep(2)
+	
+def parse_post(post):
+	""" Scrapes and indexes a post and it's comments. """
+	# Ignore posts less than 24 hours old
+	if time.time() - post.created < 60 * 60 * 24: return False
+	
+	# Add post to database
+	postid_db = db.insert('Posts', \
+			(None, \
+			post.id, \
+			post.title, \
+			post.url, \
+			post.selftext, \
+			post.author, \
+			post.permalink, \
+			post.subreddit, \
+			post.num_comments, \
+			post.upvotes, \
+			post.downvotes, \
+			post.score, \
+			post.created_utc, \
+			int(post.is_self), \
+			int(post.over_18)))
+	# If post already exists, we've already indexed it; skip!
+	if postid_db == -1: return False
+	# Write post to DB so we don't hit it again
+	
+	# NOTE: postid_db is the ID of the post in the database; NOT on reddit
+	
+	# Check for self-post
+	if post.selftext != '':
+		urls = get_links_from_body(post.selftext)
+		for url in urls:
+			parse_url(url, postid=postid_db)
+	else:
+		# Attempt to retrieve hash(es) from link
+		parse_url(post.url, postid=postid_db)
+	
+	# Iterate over top-level comments
+	if post.num_comments > 0:
+		reddit.fetch_comments(post)
+		for comment in post.comments:
+			parse_comment(comment, postid_db)
+	db.commit()
+	
+def parse_comment(comment, postid):
+	""" 
+		Parses links from a comment. Populates DB.
+		Recursively parses child comments.
+	"""
+	urls = get_links_from_body(comment.body)
+	if len(urls) > 0:
+		# Only insert comment into DB if it contains a link
+		comid_db = db.insert('Comments', \
+				(None, \
+				postid, \
+				comment.id, \
+				comment.author, \
+				comment.body, \
+				comment.upvotes, \
+				comment.downvotes, \
+				comment.created_utc))
+		for url in urls:
+			parse_url(url, postid=postid, commentid=comid_db)
+	# Recurse over child comments
+	for child in comment.children:
+		parse_comment(child, postid)
+
+def get_links_from_body(body):
+	""" Returns list of URLs found in body (e.g. selfpost or comment). """
+	result = []
+	i = -1 # Starting index
+	while True:
+		i = body.find('http://', i + 1) # Find next link
 		if i == -1: break
 		j = i
+		# Iterate forward until we hit the end of the URL
 		while j < len(body)   and \
 			    body[j] != ')'  and \
 			    body[j] != ']'  and \
@@ -313,83 +269,200 @@ def get_images_from_body(body, postid=0, comment=None):
 					body[j] != '\n' and \
 					body[j] != '\t':
 			j += 1
-		url = body[i:j]
-		get_image_hash(url, postid=postid, comment=comment)
+		result.append(body[i:j]) # Add to list
 		i = j
+	result = list(set(result)) # Remove duplicates
+	return result
 
+def sanitize_url(url):
+	""" Sanitizes URLs for DB input, strips excess chars """
+	url = url.replace('"', '%22')
+	url = url.replace("'", '%27')
+	if '?' in url: url = url[:url.find('?')]
+	if '#' in url: url = url[:url.find('#')]
+	return url
 
-def post_id_generator(starting=None):
-	""" Generates next reddit post ID (base36). Can resume from 'starting' (+1) """
-	alpha = '0123456789abcdefghijklmnopqrstuvwxyz'
-	num = 0
-	if starting != None:
-		p = 0
-		for i in xrange(len(starting) - 1, -1, -1):
-			num += alpha.find(starting[i]) * pow(len(alpha), p)
-			p += 1
-	
-	while True:
-		num += 1
-		result = ''
-		temp = num
-		while temp > 0:
-			result = alpha[temp % len(alpha)] + result
-			temp /= len(alpha)
-		yield num
-
-
-def scrape_post(post):
-	""" Scrapes content/images from Post. Recursively scrapes comments. Writes to DB. """
-	# Ignore posts less than 24 hours old
-	if time.time() - post.created < 60 * 60 * 24: return False
-	
-	# Check if Posts table already contains 'reddit_id'
-	postid_db = db.insert('Posts', (None, post.id, post.title, post.url, post.selftext, post.author, post.permalink, post.subreddit, post.num_comments, post.upvotes, post.downvotes, post.score, post.created_utc, int(post.is_self), int(post.over_18)))
-	if postid_db == -1: return False # Post is not unique; skip
+def parse_url(url, postid=0, commentid=0):
+	""" Gets image hash(es) from URL, populates database """
+	while url.endswith('/'): url = url[:-1]
+	if 'imgur.com' in url:
+		if '?' in url: url = url[:url.find('?')]
+		if '.com/a/' in url:
+			# Album
+			print ''
+			result = parse_album(url, postid=postid, commentid=commentid)
+			db.commit()
+			return result
+		elif url.lower().endswith('.jpg') or \
+				url.lower().endswith('.jpeg') or \
+				url.lower().endswith('.png')  or \
+				url.lower().endswith('.gif'):
+			# Direct imgur link, find highest res
+			url = imgur_get_highest_res(url)
+			# Drop out of if statement & parse image
+		else:
+			# Indirect imgur link (e.g. "imgur.com/abcde")
+			r = web.get(url)
+			if '"image_src" href="' in r:
+				url = web.between(r, '"image_src" href="', '"')[0]
+			else:
+				print '\n      [!] unable to find direct imgur link for %s (404?)' % url
+				return False
+	elif url.lower().endswith('.jpg') or \
+			url.lower().endswith('.jpeg') or \
+			url.lower().endswith('.png')  or \
+			url.lower().endswith('.gif'):
+		# Direct link to non-imgur image
+		pass # Drop out of if statement & parse image
+	else:
+		# Not imgur, not a direct link; no way to parse
+		# TODO Develop a way to find images in other websites?
+		return False
+	print ''
+	result = parse_image(url, postid=postid, commentid=commentid)
 	db.commit()
-	
-	if post.selftext != '': # Get images from self-text (if any)
-		get_images_from_body(post.selftext, postid=postid_db)
-	else: # Try to get hash of URL (if relevant)
-		get_image_hash(post.url, postid=postid_db)
-	
-	if post.num_comments > 0 or post.is_self:
-		# Retrieve comments for post if there are comments
-		reddit.fetch_comments(post)
-		
-		# Scrape delicious comments for content/images
-		while len(post.comments) > 0:
-			comment = post.comments.pop(0)
-			scrape_comments(comment, postid_db)
-			del comment
+	return result
+
+def parse_album(url, postid=0, commentid=0):
+	""" Indexes every image in an imgur album """
+	# cleanup URL
+	url = url.replace('http://', '').replace('https://', '')
+	while url.endswith('/'): url = url[:-1]
+	while url.count('/') > 2: url = url[:url.rfind('/')]
+	if '?' in url: url = url[:url.find('?')]
+	if '#' in url: url = url[:url.find('#')]
+	url = 'http://%s' % url # How the URL will be stored in the DB
+	albumid = db.insert('Albums', (None, url))
+	if albumid == -1:
+		albumids = db.select('id', 'Albums', 'url = "%s"' % url)
+		if len(albumids) == 0: return
+		albumid = albumids[0][0]
+	# Download album
+	url = url + '/noscript'
+	r = web.get(url)
+	links = web.between(r, 'img src="http://i.', '"')
+	for link in links:
+		link = 'http://i.%s' % link
+		if '?' in link: link = link[:link.find('?')]
+		if '#' in link: link = link[:link.find('#')]
+		link = imgur_get_highest_res(link)
+		# Parse each image
+		parse_image(link, postid=postid, commentid=commentid, albumid=albumid)
+	if len(links) == 0:
+		print '      [!] no images found in album!'
+		return False
+	else:
+		return True
+
+def parse_image(url, postid=0, commentid=0, albumid=0):
+	""" 
+		Downloads & indexes image.
+		Populates 'Hashes', 'ImageURLs', and 'Images' tables
+	"""
+	try:
+		(hashid, urlid, downloaded) = get_hashid_and_urlid(url)
+	except Exception, e:
+		print '\n      [!] failed to calculate hash for %s' % url
+		print '      [!] Exception: %s' % str(e)
+		return False
+	# 'Images' table is used for linking reddit posts/comments to images
+	# If there is no post/comment, don't bother linking
+	if postid != 0 and commentid != 0:
+		imageid = db.insert('Images', (urlid, hashid, albumid, postid, commentid))
 	return True
 
 
-# comment   - the comment to recursively scrape (ReddiWrap.Comment object)
-# postid_db - numeric reference to Posts table
-def scrape_comments(comment, postid_db):
-	""" Scrapes data/images contained in "comment", recursively call on children. """
+def get_hashid_and_urlid(url, verbose=True):
+	""" 
+		Retrieves hash ID ('Hashes' table) and URL ID 
+		('ImageURLs' table) for an image at a given URL.
+		Populates 'Hashes' and 'ImageURLs' if needed.
+		3rd tuple is True if downloading of image was required
+	"""
+	existing = db.select('id, hashid', 'ImageURLs', 'url = "%s"' % url)
+	if len(existing) > 0:
+		urlid = existing[0][0]
+		hashid = existing[0][1]
+		return (hashid, urlid, False)
 	
-	get_images_from_body(comment.body, postid=postid_db, comment=comment)
-	# Load more comments?
-	while len(comment.children) > 0:
-		child_comment = comment.children.pop(0)
-		scrape_comments(child_comment, postid_db)
-		del child_comment
+	# Download image
+	(file, temp_image) = tempfile.mkstemp(prefix='redditimg', suffix='.jpg')
+	close(file)
+	if verbose: print '      [+] downloading %s ...' % url,
+	stdout.flush()
+	if not web.download(url, temp_image):
+		if verbose: print 'failed'
+		raise Exception('unable to download image at %s' % url)
+	# Get image hash
+	try:
+		if verbose: print 'hashing ...',
+		stdout.flush()
+		image_hash = str(avhash(temp_image))
+	except Exception, e:
+		# Failed to get hash, delete image & raise exception
+		if verbose: print 'failed'
+		try: remove(temp_image)
+		except: pass
+		raise e
+	if verbose: print 'indexing ...',
+	stdout.flush()
+	
+	# Insert image hash into Hashes table
+	hashid = db.insert('Hashes', (None, image_hash))
+	if hashid == -1: 
+		# Already exists, need to lookup existing hash
+		hashids = db.select('id', 'Hashes', 'hash = "%s"' % (image_hash))
+		if len(hashids) == 0:
+			try: remove(temp_image)
+			except: pass
+			raise Exception('unable to add hash to table, or find hash (wtf?)')
+		hashid = hashids[0][0]
+	
+	# Image attributes
+	try:
+		(width, height) = dimensions(temp_image)
+		filesize = path.getsize(temp_image)
+		urlid = db.insert('ImageURLs', (None, url, hashid, width, height, filesize))
+		db.commit()
+		create_thumb(temp_image, urlid) # Make a thumbnail!
+		if verbose: print 'done'
+	except Exception, e:
+		try: remove(temp_image)
+		except: pass
+		raise e
+	remove(temp_image)
+	return (hashid, urlid, True)
 
+def imgur_get_highest_res(url):
+	""" Retrieves highest-res imgur image """
+	if not 'h.' in url:
+		return url
+	temp = url.replace('h.', '.')
+	m = web.get_meta(temp)
+	if 'Content-Type' in m and 'image' in m['Content-Type'].lower():
+		return temp
+	else:
+		return url
 
 def save_subs(filename):
+	""" Copies list of subreddits to filename """
 	sub_list = load_list('subs.txt')
 	save_list(sub_list, filename)
 	return sub_list
 
 def save_list(lst, filename):
+	""" Saves list to filename """
 	f = open(filename, 'w')
 	for item in lst:
 		f.write(item + '\n')
 	f.close()
 
 def load_list(filename, load_subs=False):
+	"""
+		Loads list from filename
+		If 'load_subs' is true and the list is empty,
+		automatically load full list of subs & save to file
+	"""
 	if not path.exists(filename):
 		return save_subs(filename)
 	f = open(filename, 'r')
@@ -401,76 +474,46 @@ def load_list(filename, load_subs=False):
 		return save_subs(filename)
 	return result
 
-def start():
-	""" Where everything comes together.  """
-	result = reddit.login(user=REDDIT_USER, password=REDDIT_PASSWORD)
-	if result != 0:
-		print ' unable to login (%d), exiting\n' % result
-		exit(1)
-	
-	'''
-	# For testing on my sandbox subreddit
-	posts = reddit.get('/r/freshbreath/new')
-	for i,post in enumerate(posts):
-		if i < 13: continue
-		print post
-		scrape_post(post)
-		#break
-	exit(0)
-	'''
-	
-	while True:
-		for timeframe in ['all', 'month', 'week']:
-			if timeframe == 'week':
-				SUBREDDITS = load_list('subs_%s.txt' % timeframe, load_subs=True)
-			else:
-				SUBREDDITS = load_list('subs_%s.txt' % timeframe)
-			while len(SUBREDDITS) > 0:
-				subreddit = SUBREDDITS.pop(0)
-				index        = 0
-				total_posts  = 0
-				time_started = 0
-				while True:
-					posts = []
-					
-					delta = time.time() - time_started  # Time elapsed since the request was made
-					time_started = time.time()
-					if delta < 2: time.sleep(2 - delta) # Ensure at least 2 seconds between requests
-					
-					if total_posts == 0:
-						print 'grabbing first page... /r/%s/top?t=%s' % (subreddit, timeframe)
-						stdout.flush()
-						posts = reddit.get('/r/%s/top?t=%s' % (subreddit, timeframe))
-					elif reddit.has_next():
-						print 'grabbing next page... %s' % (reddit.last_url)
-						stdout.flush()
-						posts = reddit.get_next()
-					else:
-						break
-					
-					if posts == None or len(posts) == 0: break
-					total_posts += len(posts)
-					
-					while len(posts) > 0:
-						post = posts.pop(0)
-						index += 1
-						
-						print '%4d/%d) scraping: %s' % (index, total_posts, post.__repr__().replace('\n', ''))
-						stdout.flush()
-						
-						time_started = time.time()
-						if scrape_post(post):
-							# Only sleep if we actually made a request to reddit
-							delta = time.time() - time_started  # Time elapsed since the request was made
-							if delta < 2: time.sleep(2 - delta) # Ensure at least 2 seconds between requests
-						del post
-				save_list(SUBREDDITS, 'subs_%s.txt' % timeframe)
-	exit(0)
+def check_and_drain_queue():
+	""" 
+		Indexes & empties file containing list of URLs to index
+		File is populated via front-end requests.
+	"""
+	if not path.exists('index_queue.lst'): return
+	# Read URLs
+	f = open('index_queue.lst', 'r')
+	queue_lines = f.read()
+	f.close()
+	# Delete
+	#remove('index_queue.lst')
+	f = open('index_queue.lst', 'w')
+	f.write('')
+	f.close()
+	queue = queue_lines.split('\n')
+	while queue.count('') > 0: queue.remove('')
+	if len(queue) == 0: return
+	queue = list(set(queue)) # remove duplicates
+	print '\n      [!] found %d images to index' % len(queue)
+	for url in queue:
+		url = url.strip()
+		if url == '': continue
+		parse_url(url)
+
+##################
+# Print methods
+# Useful for overwriting one-liners
+def prnt(text):
+	try:
+		print '\r%s%s' % (text, ' ' * (CONSOLE_WIDTH - len(text))),
+	except: pass
+def prntln(text):
+	try:
+		print '\r%s%s' % (text, ' ' * (CONSOLE_WIDTH - len(text)))
+	except: pass
 
 if __name__ == '__main__':
-	# only run when executed
+	""" only run when executed (not imported) """
 	try:
-		start()
+		main()
 	except KeyboardInterrupt:
 		print '\n\n Interrupted (^C)'
-	

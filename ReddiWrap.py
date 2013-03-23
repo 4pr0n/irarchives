@@ -13,26 +13,13 @@ TODO:
 	
 	throw exceptions when receiving errors from server (403)
 	
-	update Web to be compatible w/ python3.x, python 2.4.x, etc
 """
 
-import Web # Class for communicating with the web server.
+from Httpy import Httpy # Class for communicating with the web server.
 
 from sys import exit
 
-try:
-	import json
-except ImportError:
-	# Older versions of python don't work with 'json', so we use simplejson
-	try:
-		import simplejson as json
-	except ImportError:
-		# If simplejson isn't found, we must be on Python 2.5 or below
-		try:
-			from JSON import json
-		except ImportError:
-			print '\un Unable to load JSON library! exiting'
-			exit(1)
+import json
 
 from datetime import date # For converting unix epoch time in seconds to date/time
 from time import time               # For getting current... and possibly throttling requests
@@ -347,7 +334,7 @@ class ReddiWrap:
 			user_agent = 'ReddiWrap'
 		
 		# Create object we will use to communicate with reddit's servers
-		self.web = Web.Web(user_agent=user_agent) 
+		self.web = Httpy(user_agent=user_agent) 
 		
 		self.modhash   = ''    # Hash used to authenticate/interact with user account
 		self.last_url  = ''    # The last URL retrieved
