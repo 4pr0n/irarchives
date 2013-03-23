@@ -79,6 +79,7 @@ def search_url(url):
 		return
 	elif 'reddit.com/r/' in url and '/comments/' in url:
 		# Reddit post
+		if not url.endswith('.json'): url += '.json'
 		r = web.get(url)
 		if '"url": "' in r:
 			url = web.between(r, '"url": "', '"')[0]
