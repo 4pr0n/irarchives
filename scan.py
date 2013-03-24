@@ -178,7 +178,7 @@ def parse_subreddit(subreddit, timeframe):
 		for post in posts:
 			current_post_index += 1
 			prnt('[%3d/%3d] scraping http://redd.it/%s %s' % \
-					(current_post_index, total_post_count, post.id, post.url))
+					(current_post_index, total_post_count, post.id, post.url[:50]))
 			stdout.flush()
 			if parse_post(post): # Returns True if we made a request to reddit
 				time.sleep(2) # Sleep to stay within rate limit
@@ -397,6 +397,10 @@ def get_hashid_and_urlid(url, verbose=True):
 	try:
 		if verbose: print 'hashing ...',
 		stdout.flush()
+		(width, height) = dimensions(temp_image)
+		if width > 4000 or height > 4000:
+			print '\n[!] image too large to hash (%dx%d)' % (width, height)
+			raise Exception('too large to hash (%dx%d)' % (width, height))
 		image_hash = str(avhash(temp_image))
 	except Exception, e:
 		# Failed to get hash, delete image & raise exception
@@ -420,7 +424,6 @@ def get_hashid_and_urlid(url, verbose=True):
 	
 	# Image attributes
 	try:
-		(width, height) = dimensions(temp_image)
 		filesize = path.getsize(temp_image)
 		urlid = db.insert('ImageURLs', (None, url, hashid, width, height, filesize))
 		db.commit()
