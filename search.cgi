@@ -47,7 +47,8 @@ def main():
 			'url'   : search_url,
 			'user'  : search_user,
 			'cache' : search_cache,
-			'text'  : search_text
+			'text'  : search_text,
+			'google': search_google
 		}
 	for key in func_map:
 		if key in keys:
@@ -83,6 +84,7 @@ def search_url(url):
 		r = web.get(url)
 		if '"url": "' in r:
 			url = web.between(r, '"url": "', '"')[0]
+	if ' ' in url: url = url.replace(' ', '%20')
 	try:
 		(url, posts, comments, related, downloaded) = \
 				get_results_tuple_for_image(url)
@@ -265,6 +267,49 @@ def search_text(text):
 			'comments' : comments,
 			'related'  : related
 		} )
+
+def search_google(url):
+	""" 
+		Searches google reverse image search,
+		gets URL of highest-res image,
+		searches that.
+	"""
+	# No country redirect
+	web.get('http://www.google.com/ncr')
+	sleep(0.5)
+	# Get image results
+	u = 'http://images.google.com/searchbyimage?hl=en&safe=off&image_url=%s' % url
+	r = web.get(u)
+	if 'that include matching images' in r:
+		r = r[r.find('that include matching images'):]
+	else:
+		print_error("could not find image from google")
+		return
+	if 'Visually similar images' in r:
+		r = r[r.find('Visually similar images'):]
+	found = False
+	while not found:
+		images = web.between(r, 'href="/imgres?imgurl=', '&amp;imgref')
+		for image in images:
+			splits = image.split('&')
+			image = ''
+			for split in splits:
+				if split.startswith('amp;'): break
+				if image != '': image += '&'
+				image += split
+			image = web.unshorten(image)
+			m = web.get_meta(image)
+			if 'Content-Type' in m and 'image' in m['Content-Type'].lower():
+				found = True
+				break
+		if found or '>Next<' not in r: break
+		sleep(2)
+		r = web.get('%s&start=10' % u)
+	
+	if not found:
+		print_error('could not find image from google')
+	search_url(image)
+	
 
 ###################
 # Helper methods
@@ -580,6 +625,9 @@ def is_user_valid(username):
 
 if __name__ == '__main__':
 	""" Entry point. Only run when executed; not imported. """
+	#search_google('http://fap.to/images/full/45/465/465741907.jpg')
+	#search_google('http://i.imgur.com/TgYeS8u.png')
+	#search_google('http://i.imgur.com/T4Wtb6f.jpg')
 	print "Content-Type: application/json"
 	print ""
 	main() # Main & it's called functions will print as needed
