@@ -367,7 +367,7 @@ def parse_image(url, postid=0, commentid=0, albumid=0):
 		return False
 	# 'Images' table is used for linking reddit posts/comments to images
 	# If there is no post/comment, don't bother linking
-	if postid != 0 and commentid != 0:
+	if postid != 0 or commentid != 0:
 		imageid = db.insert('Images', (urlid, hashid, albumid, postid, commentid))
 	return True
 
