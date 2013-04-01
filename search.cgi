@@ -37,6 +37,7 @@ TRUSTED_SUBREDDITS = [ \
 		'UnrealGirls']
 MAX_ALBUM_SEARCH_DEPTH = 3  # Number of images to download from album
 MAX_ALBUM_SEARCH_TIME  = 10 # Max time to search album in seconds
+MAX_GOOGLE_SEARCH_TIME = 20 # Max time to spend retrieving & searching google results
 
 ####################
 # MAIN
@@ -276,21 +277,26 @@ def search_google(url):
 	"""
 	# No country redirect
 	web.get('http://www.google.com/ncr')
-	sleep(0.5)
+	sleep(0.2)
 	# Get image results
 	u = 'http://images.google.com/searchbyimage?hl=en&safe=off&image_url=%s' % url
 	r = web.get(u)
 	if 'that include matching images' in r:
 		r = r[r.find('that include matching images'):]
 	else:
-		print_error("could not find image from google")
+		print_error("no results (searched database and google)")
 		return
 	if 'Visually similar images' in r:
 		r = r[r.find('Visually similar images'):]
-	found = False
-	while not found:
+	time_started = time()
+	total_searched = 0
+	posts    = []
+	comments = []
+	related  = []
+	while True:
 		images = web.between(r, 'href="/imgres?imgurl=', '&amp;imgref')
 		for image in images:
+			if time() - time_started > MAX_GOOGLE_SEARCH_TIME: break
 			splits = image.split('&')
 			image = ''
 			for split in splits:
@@ -299,16 +305,34 @@ def search_google(url):
 				image += split
 			image = web.unshorten(image)
 			m = web.get_meta(image)
-			if 'Content-Type' in m and 'image' in m['Content-Type'].lower():
-				found = True
-				break
-		if found or '>Next<' not in r: break
-		sleep(2)
+			if 'Content-Type' not in m or \
+					'image' not in m['Content-Type'].lower():
+				continue
+
+			try:
+				(t_url, t_posts, t_comments, t_related, t_downloaded) = \
+						get_results_tuple_for_image(image)
+			except Exception, e:
+				continue
+			total_searched += 1
+			merge_results(posts, t_posts)
+			merge_results(comments, t_comments)
+			merge_results(related, t_related)
+			if len(t_posts) + len(t_comments) > 0:
+				url = t_url
+		if time() - time_started > MAX_GOOGLE_SEARCH_TIME: break
+		if '>Next<' not in r: break
+		sleep(1)
 		r = web.get('%s&start=10' % u)
-	
-	if not found:
-		print_error('could not find image from google')
-	search_url(image)
+	if len(posts) + len(comments) + len(related) == 0:
+		print_error('no results - searched %d google images' % total_searched)
+		return
+	print json.dumps( {
+			'posts'    : posts,
+			'comments' : comments,
+			'url'      : url,
+			'related'  : related
+		} )
 	
 
 ###################

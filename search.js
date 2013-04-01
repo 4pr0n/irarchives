@@ -30,6 +30,8 @@ function search_click() {
 		sendSearchRequest('search.cgi?cache=' + url.substr(6));
 	} else if (url.indexOf('user:') == 0) {
 		sendSearchRequest('search.cgi?user=' + url.substr(5));
+	} else if (url.indexOf('google:') == 0) {
+		sendSearchRequest('search.cgi?google=' + url.substr(7));
 	} else if (url.indexOf('.') == -1) {
 		// No period, assume username
 		sendSearchRequest('search.cgi?user=' + url);
