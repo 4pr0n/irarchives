@@ -31,6 +31,54 @@ def avhash(im):
 	del im
 	return result
 
+def avhash_dict(im):
+	""" 
+		Generate hashes for the image, including variations of the image
+		* Regular image
+		* Mirrored (left-right)
+		* Rotated left (90deg)
+		* Rotated right (270deg)
+	"""
+	if not isinstance(im, Image.Image):
+		im = Image.open(im)
+	im = im.resize((16, 16), Image.ANTIALIAS).convert('L')
+	ttl = 0
+	for gd in im.getdata(): ttl += gd
+	avg = ttl / 256
+	result = {}
+	
+	# Regular hash
+	regular_hash = 0
+	for i, gd in enumerate(im.getdata()):
+		if gd > avg:
+			regular_hash += (1 << i)
+	result['hash'] = regular_hash
+	
+	# Mirror hash
+	mirror_im = im.transpose(Image.FLIP_LEFT_RIGHT)
+	mirror_hash = 0
+	for i, gd in enumerate(mirror_im.getdata()):
+		if gd > avg:
+			mirror_hash += (1 << i)
+	result['mirror'] = mirror_hash
+	
+	# Rotated 90deg hash
+	left_im = im.transpose(Image.ROTATE_90)
+	left_hash = 0
+	for i, gd in enumerate(left_im.getdata()):
+		if gd > avg:
+			left_hash += (1 << i)
+	result['left'] = left_hash
+	
+	# Rotated 270deg hash
+	right_im = im.transpose(Image.ROTATE_270)
+	right_hash = 0
+	for i, gd in enumerate(right_im.getdata()):
+		if gd > avg:
+			right_hash += (1 << i)
+	result['right'] = right_hash
+	del im
+	return result
 
 def dimensions(im):
 	""" Returns tuple (Width, Height) for given image. """
@@ -75,6 +123,12 @@ if __name__ == '__main__':
 			exit(1)
 	
 	print 'Hash:\t\t%d' % avhash(filename)
+	
+	print ''
+	d = avhash_dict(filename)
+	for key in d:
+		print 'Hash[%s] = \t%d' % (key, d[key])
+	print ''
 	
 	dim = dimensions(filename)
 	print 'Dimensions:\t%dx%d' % (dim[0], dim[1])
