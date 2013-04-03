@@ -318,8 +318,7 @@ def search_google(url):
 			merge_results(posts, t_posts)
 			merge_results(comments, t_comments)
 			merge_results(related, t_related)
-			if len(t_posts) + len(t_comments) > 0:
-				url = t_url
+			#if len(t_posts) + len(t_comments) > 0: url = t_url
 		if time() - time_started > MAX_GOOGLE_SEARCH_TIME: break
 		if '>Next<' not in r: break
 		sleep(1)
@@ -330,7 +329,7 @@ def search_google(url):
 	print json.dumps( {
 			'posts'    : posts,
 			'comments' : comments,
-			'url'      : url,
+			'url'      : 'google:%s' % url,
 			'related'  : related
 		} )
 	
