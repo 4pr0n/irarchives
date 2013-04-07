@@ -374,9 +374,15 @@ def get_results_tuple_for_image(url):
 			posts.append(post_dict)
 			
 			for rel in build_related_comments(postid, urlid, albumid):
-				if rel['author'] != 'rarchives':
-					related.append(rel)
+				if rel['author'] == 'rarchives': continue
+				related.append(rel)
 	
+	for com in comments:
+		for rel in related:
+			if rel['hexid'] == com['hexid']:
+				related.remove(rel)
+				break
+
 	posts    = sort_by_ranking(posts)
 	comments = sort_by_ranking(comments)
 	return (url, posts, comments, related, downloaded)
