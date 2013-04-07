@@ -366,13 +366,17 @@ def get_results_tuple_for_image(url):
 		if commentid != 0:
 			# Comment
 			comment_dict = build_comment(commentid, urlid, albumid)
+			if comment_dict['author'] == 'rarchives': continue
 			comments.append(comment_dict)
 		else:
 			# Post
 			post_dict = build_post(postid, urlid, albumid)
 			posts.append(post_dict)
 			
-			related += build_related_comments(postid, urlid, albumid)
+			for rel in build_related_comments(postid, urlid, albumid):
+				if rel['author'] != 'rarchives':
+					related.append(rel)
+	
 	posts    = sort_by_ranking(posts)
 	comments = sort_by_ranking(comments)
 	return (url, posts, comments, related, downloaded)

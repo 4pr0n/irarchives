@@ -78,10 +78,12 @@ function getExternalSearchLinks(url) {
 	var out = '';
 	out += '<div style="text-align: left;">';
 	out += '<ul>';
-	if (url.indexOf('google') != 0) {
+	if (url.indexOf('google:') != 0) {
 		out += '<li> <a class="external_link" ';
 		out +=         'href="?url=google:' + url + '">';
 		out +=         'try the 20 second search</a></li>';
+	} else {
+		url = url.substr(7);
 	}
 	out += '<li> <a class="external_link" ';
 	out +=         'href="data:text/html;charset=utf-8, ';
