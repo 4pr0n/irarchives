@@ -401,6 +401,9 @@ def get_hashid_and_urlid(url, verbose=True):
 		if width > 4000 or height > 4000:
 			print '\n[!] image too large to hash (%dx%d)' % (width, height)
 			raise Exception('too large to hash (%dx%d)' % (width, height))
+		if width == 161 and height == 81:
+			# Size of empty imgur image ('not found!')
+			raise Exception('Found 404 image dimensions (161x81)')
 		image_hash = str(avhash(temp_image))
 	except Exception, e:
 		# Failed to get hash, delete image & raise exception
@@ -442,7 +445,8 @@ def imgur_get_highest_res(url):
 		return url
 	temp = url.replace('h.', '.')
 	m = web.get_meta(temp)
-	if 'Content-Type' in m and 'image' in m['Content-Type'].lower():
+	if 'Content-Type' in m and 'image' in m['Content-Type'].lower() and \
+			'Content-Length' in m and m['Content-Length'] != '503':
 		return temp
 	else:
 		return url
