@@ -82,7 +82,7 @@ class Httpy:
 			return False
 		return True
 
-	def get_meta(self, url, raise_exception=False):
+	def get_meta(self, url, raise_exception=False, timeout=DEFAULT_TIMEOUT):
 		""" 
 			Returns a dict containing info about the URL.
 			Such as Content-Type, Content-Length, etc.
@@ -90,13 +90,13 @@ class Httpy:
 		try:
 			headers = self.get_headers()
 			req = Request(url, headers=headers)
-			handle = self.urlopen(req)
+			handle = self.urlopen(req, timeout=timeout)
 			return handle.info()
 		except Exception, e:
 			if raise_exception: raise e
 		return {}
 	
-	def unshorten(self, url):
+	def unshorten(self, url, timeout=DEFAULT_TIMEOUT):
 		""" 
 			Attempts to resolve redirected URL. 
 			Returns new resolved URL if found,
@@ -105,7 +105,7 @@ class Httpy:
 		try:
 			headers = self.get_headers()
 			req = Request(url, headers=headers)
-			handle = urlopen(req)
+			handle = urlopen(req, timeout=timeout)
 			return handle.url
 		except Exception:
 			return url
