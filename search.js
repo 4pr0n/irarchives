@@ -81,7 +81,7 @@ function getExternalSearchLinks(url) {
 	if (url.indexOf('google:') != 0) {
 		out += '<li> <a class="external_link" ';
 		out +=         'href="?url=google:' + url + '">';
-		out +=         'try the 20 second search</a></li>';
+		out +=         'try the deep search</a></li>';
 	} else {
 		url = url.substr(7);
 	}
