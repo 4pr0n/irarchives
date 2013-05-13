@@ -568,3 +568,31 @@ td.about_left {
 	padding-left: 0px;
 }
 
+div.over18 {
+	margin: 20px;
+	cursor: default;
+}
+h1.over18 {
+	color: #f00;
+	text-shadow:  4px  0px 10px rgba(250, 100, 100, 0.3),
+	              0px  4px 10px rgba(250, 100, 100, 0.3),
+	             -4px  0px 10px rgba(250, 100, 100, 0.3),
+	              0px -4px 10px rgba(250, 100, 100, 0.3);
+}
+input.over18 {
+	font-size: 1.2em;
+	font-weight: bold;
+	color: #eee;
+	background-color: #e00;
+	padding: 10px;
+	border-radius: 5px;
+	border: none;
+	margin: 10px;
+}
+input.over18:hover {
+	cursor: pointer;
+	box-shadow:   4px  0px 10px rgba(200, 0, 0, 0.3),
+	              0px  4px 10px rgba(200, 0, 0, 0.3),
+	             -4px  0px 10px rgba(200, 0, 0, 0.3),
+	              0px -4px 10px rgba(200, 0, 0, 0.3);
+

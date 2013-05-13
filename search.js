@@ -79,9 +79,11 @@ function getExternalSearchLinks(url) {
 	out += '<div style="text-align: left;">';
 	out += '<ul>';
 	if (url.indexOf('google:') != 0) {
+		/*
 		out += '<li> <a class="external_link" ';
 		out +=         'href="?url=google:' + url + '">';
 		out +=         'try the deep search</a></li>';
+		*/
 	} else {
 		url = url.substr(7);
 	}
@@ -549,16 +551,17 @@ function getCookie(key) {
 
 function over18() {
 	if (getCookie('over18') != 'true') {
-		var question = '';
-		question += 'This site may contain material intended for users 18 years and over.\n\n';
-		question += 'Press OK if you are over the age of 18.\n\n';
-		question += 'Press Cancel if you are under the age of 18 or do not wish to visit this site.';
-		var answer = confirm(question);
-		if (answer) {
-			setCookie('over18', 'true');
-		} else {
-			window.location.href = 'about:blank';
-		}
+		var body = document.getElementsByClassName('search')[0];
+		var out = '';
+		out += '<div class="over18">';
+		out += '<center>';
+		out += '<h1 class="over18">this website contains explicit content</h1>';
+		out += 'this website contains material that that is not suitable for persons under the age of 18.<br>';
+		out += '<br>';
+		out += '<input class="over18" type="button" onclick="setCookie(\'over18\', \'true\'); document.location.reload(true);" value="i am over 18 years old" />';
+		out += '<input class="over18" type="button" onclick="window.location.href = \'about:blank\'" value="i am less than 18 years old" />';
+		out += '</center>';
+		body.innerHTML = out;
 	}
 }
 
@@ -638,7 +641,9 @@ function init() {
 	if (!checkURL()) {
 		// Not loading an image; randomly pick a url to display
 		var urls = ['http://i.imgur.com/Xz42HQa.jpg', 'http://i.imgur.com/IFdWn.jpg', 'http://i.imgur.com/3qrBM.jpg', 'http://i.minus.com/ibu7TXSVaN73Nn.gif', 'http://i.imgur.com/O1IXj.jpg', 'http://i.imgur.com/QNj8w.jpg', 'http://i.imgur.com/xA1wr.jpg', 'http://i.imgur.com/54SAK.jpg', 'http://i.imgur.com/EpMv9.jpg', 'http://i.imgur.com/9VAfG.jpg', 'http://i.imgur.com/OaSfh.gif', 'http://i.imgur.com/iHjXO.jpg', 'http://i.imgur.com/IDLu8.jpg', 'http://i.imgur.com/ReKZC.jpg', 'http://i.imgur.com/mhvSa.jpg', 'http://i.imgur.com/qfzpA.jpg'];
-		gebi('url').value = urls[Math.floor(Math.random() * urls.length)];
+		if (gebi('url') != null) {
+			gebi('url').value = urls[Math.floor(Math.random() * urls.length)];
+		}
 	}
 }
 
