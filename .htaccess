@@ -1,2 +1,6 @@
 AllowOverride Options
 Options +ExecCGI 
+RedirectMatch 404 ^/thumbs/*$
+RedirectMatch 404 ^/images/*$
+RewriteEngine on
+RewriteRule \.(txt|db|py)$ - [R=404]
