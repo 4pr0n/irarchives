@@ -286,6 +286,7 @@ def parse_url(url, postid=0, commentid=0):
 	""" Gets image hash(es) from URL, populates database """
 	while url.endswith('/'): url = url[:-1]
 	if 'imgur.com' in url:
+		url = url.replace('/m.imgur.com/', '/imgur.com/')
 		if '?' in url: url = url[:url.find('?')]
 		if '.com/a/' in url:
 			# Album
