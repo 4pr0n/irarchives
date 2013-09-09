@@ -25,7 +25,7 @@
 							 href="javascript:void(window.open('http://i.rarchives.com/?url='+encodeURIComponent(document.URL).replace(/\./g,'%25252E')));"
 							 onclick="gebi('bookmarklet_text').innerHTML = ''; return false;"
 							 onmousedown="gebi('bookmarklet_text').innerHTML = 'now drag & drop onto your bookmarks bar'; 
-								setTimeout(function() { gebi('bookmarklet_text').innerHTML = ''}, 2500);"
+							 setTimeout(function() { gebi('bookmarklet_text').innerHTML = ''}, 2500);"
 							 onmouseup=  "gebi('bookmarklet_text').innerHTML = '';">
 							rarchives</a>
 						<span id="bookmarklet_text"></span>
@@ -45,152 +45,159 @@
 		</div>
 		
 		<table class="page"><tr><td>
-		
-			<a class="nsfw" href="http://i.rarchives.com/" onclick="javascript:gotoRoot(); return false;">
-				<center>
-					<table><tr><td style="text-align: right;">
-						<span style="white-space: nowrap;">
-							<span class="nsfw_bracket" id="nsfw_bracket_left">{</span>
-							<span class="nsfw_red">NSFW</span>
-							<span class="nsfw_bracket" id="nsfw_bracket_right">}</span>
-						</span>
-						</td><td style="text-align: left;">
-						<span class="nsfw_white">reddit&nbsp;reverse image&nbsp;search</span>
-					</td></tr></table>
-				</center>
-			</a>
-		
-			<table id="search_table" class="search">
 			<tr>
-				<td class="search_url"> url: </td>
-				<td style="min-width: 300px;">
-					<input type  = "text"
-								 class = "search_text"
-								 id    = "url" 
-								 size  = "40"
-								 onkeydown = "searchKeyDown(event);"
-								 value = "http://i.imgur.com/3qrBM.jpg"/>
-				</td> <td>
-					<input type    = "button" 
-								 class   = "search_button"
-								 id      = "search_button"
-								 onclick = "redirect_search()"
-								 value   = "search"/>
-				<!-- </td> <td>
-					<input type    = "button" 
-								 class   = "search_button"
-								 id      = "show_hidden"
-								 onClick = "gebi('user_row').style.display = 'table-row'; gebi('show_hidden').style.display = 'none';"
-								 value   = "egg"
-								 style   = "background-color: #333; color: #000; display: none;"/>
-				-->
-				</td>
-			</tr><tr id="user_row" style="display: none;">
-				<td class="search_url"> user: </td>
 				<td>
-					<input type  = "text"
-								 class = "search_text"
-								 id    = "user" 
-								 size  = 30 
-								 onkeydown = "userKeyDown(event);"
-								 value = "gingerpuss"/>
-				</td> <td>
-					<input type    = "button" 
-								 class   = "search_button"
-								 id      = "user_button"
-								 onClick = "redirect_user();"
-								 value   = "search user"/>
-				</td>
-			</tr><tr>
-				<td class="search_status" style="display: none;"> status: </td>
-				<td class="search_status_result" colspan="3">
-					<span id="status" class="status">&nbsp;</span>
+					<a class="nsfw" href="http://i.rarchives.com/" onclick="javascript:gotoRoot(); return false;">
+						<center>
+							<table><tr><td style="text-align: right;">
+								<span style="white-space: nowrap;">
+									<span class="nsfw_bracket" id="nsfw_bracket_left">{</span>
+									<span class="nsfw_red">NSFW</span>
+									<span class="nsfw_bracket" id="nsfw_bracket_right">}</span>
+								</span>
+								</td><td style="text-align: left;">
+								<span class="nsfw_white">reddit&nbsp;reverse image&nbsp;search</span>
+							</td></tr></table>
+						</center>
+					</a>
+				
+					<table id="search_table" class="search">
+						<tr>
+							<td class="search_url"> url: </td>
+							<td style="min-width: 300px;">
+								<input type  = "text"
+											 class = "search_text"
+											 id    = "url" 
+											 size  = "40"
+											 onkeydown = "searchKeyDown(event);"
+											 value = "http://i.imgur.com/3qrBM.jpg"/>
+							</td> <td>
+								<input type    = "button" 
+											 class   = "search_button"
+											 id      = "search_button"
+											 onclick = "redirect_search()"
+											 value   = "search"/>
+							<!-- </td> <td>
+								<input type    = "button" 
+											 class   = "search_button"
+											 id      = "show_hidden"
+											 onClick = "gebi('user_row').style.display = 'table-row'; gebi('show_hidden').style.display = 'none';"
+											 value   = "egg"
+											 style   = "background-color: #333; color: #000; display: none;"/>
+							-->
+							</td>
+						</tr>
+						<tr id="user_row" style="display: none;">
+							<td class="search_url"> user: </td>
+							<td>
+								<input type  = "text"
+											 class = "search_text"
+											 id    = "user" 
+											 size  = 30 
+											 onkeydown = "userKeyDown(event);"
+											 value = "gingerpuss"/>
+							</td> <td>
+								<input type    = "button" 
+											 class   = "search_button"
+											 id      = "user_button"
+											 onClick = "redirect_user();"
+											 value   = "search user"/>
+							</td>
+						</tr><tr>
+							<td class="search_status" style="display: none;"> status: </td>
+							<td class="search_status_result" colspan="3">
+								<span id="status" class="status">&nbsp;</span>
+							</td>
+						</tr>
+					</table>
+					
+					<div id="output_posts"><br><br></div>
+					<div id="output_comments"></div>
+					<div id="output_related"></div>
+					<span id="output"></span>
+					
+					<!--
+					<h3>add subreddit to scan</h3>
+					<b>subreddit:</b>
+					<input 	type  = "text"
+						class = "textbox"
+						id    = "subreddit"
+						size  = 25
+						value = "nsfw"/>
+					<input  type    = "button"
+						class   = "button"
+						onClick = "add_subreddit();"
+						value   = "add subreddit"/>
+					<div id="subreddit_status"></div>
+					-->
+					
+					<table id="menu_table" class="menu">
+						<tr class="menu">
+							<td class="menu" id="database_menu" onclick="menu_database_click();">
+								database statistics
+							</td><td class="menu" id="subreddit_menu" onclick="menu_subreddit_click();">
+								subreddits
+							</td><td class="menu" id="about_menu" onclick="menu_about_click();">
+								about
+							</td>
+						</tr><tr>
+							<td colspan="3" id="database_dropdown" class="menu_dropdown">
+								<table style="width: 60%; padding-left: 20px; padding-right: 20px; margin-left: auto; margin-right: auto;">
+									<tr>
+										<td align="right">images:</td>
+										<td id="db_images" class="db_status">...,...</td>
+										<td align="right">albums:</td>
+										<td id="db_albums" class="db_status">..,...</td>
+									</tr>
+									<tr>
+										<td align="right">posts:</td>
+										<td id="db_posts" class="db_status">...,...</td>
+										<td align="right">comments:</td>
+										<td id="db_comments" class="db_status">..,...</td>
+									</tr>
+									<tr>
+										<td align="center" colspan="4"><a href="javascript:menu_subreddit_click();" class="no_color">subreddits</a>:
+										<span id="db_subreddits" class="db_status">...</span></td>
+									</tr>
+								</table>
+							</td><td colspan="3" id="subreddit_dropdown" class="menu_dropdown">
+								<div id="subreddits"></div>
+							</td><td colspan="3" id="about_dropdown" class="menu_dropdown">
+								<table class="about_content">
+									<tr><td class="about_left">who?</td>
+										<td>created by <a class="bookmarklet" href="http://reddit.com/user/4_pr0n">4_pr0n</a></td></tr>
+									<tr class="border_spacer"><td class="about_left">what?</td>
+										<td>shows reddit posts, comments, and albums that contain an image</td></tr>
+									<tr class="border_spacer"><td class="about_left">when?</td>
+										<td>constantly scrapes images from day-old posts</td></tr>
+									<tr class="border_spacer"><td class="about_left">where?</td>
+										<td>from the weekly top 1,000 posts in the listed subreddits</td></tr>
+									<tr class="border_spacer"><td class="about_left">why?</td>
+										<td>the greater good</td></tr>
+									<tr><td class="about_left">how?</td><td> image comparison & python. see the source code on <a class="bookmarklet" href="https://github.com/4pr0n/irarchives" target="_BLANK">github</a></td></tr>
+								</table>
+							</td>
+						</tr>
+					</table> <!-- end of 'menu' table -->
+					
+					<table style="width: 100%;">
+						<tr>
+							<td>
+								<p class="footer" style="text-align: left; line-height: 120%;">suggestions or comments? <br>
+									contact <a 
+									 class="bookmarklet"
+									 href="http://www.reddit.com/message/compose/?to=4_pr0n&subject=about%20i.rarchives.com&message=I%20have%20a%20%3Ccomplaint%2C%20comment%2C%20suggestion%3E%3A"
+									>4_pr0n</a> via reddit
+								</p>
+							</td><td colspan="2">
+								<p class="footer" style="text-align: right;">this site is not affiliated with reddit.com</p>
+							</td>
+						</tr>
+					</table> <!-- end of 'footer' table -->
+			
 				</td>
 			</tr>
-			</table>
-			
-			<div id="output_posts"><br><br></div>
-			<div id="output_comments"></div>
-			<div id="output_related"></div>
-			<span id="output"></span>
-			
-			<!--
-			<h3>add subreddit to scan</h3>
-			<b>subreddit:</b>
-			<input 	type  = "text"
-				class = "textbox"
-				id    = "subreddit"
-				size  = 25
-				value = "nsfw"/>
-			<input  type    = "button"
-				class   = "button"
-				onClick = "add_subreddit();"
-				value   = "add subreddit"/>
-			<div id="subreddit_status"></div>
-			-->
-			
-			<table id="menu_table" class="menu"><tr class="menu">
-				<td class="menu" id="database_menu" onclick="menu_database_click();">
-					database statistics
-				</td><td class="menu" id="subreddit_menu" onclick="menu_subreddit_click();">
-					subreddits
-				</td><td class="menu" id="about_menu" onclick="menu_about_click();">
-					about
-				</td>
-			</tr><tr>
-				<td colspan="3" id="database_dropdown" class="menu_dropdown">
-					<table style="width: 60%; padding-left: 20px; padding-right: 20px; margin-left: auto; margin-right: auto;">
-						<tr>
-							<td align="right">images:</td>
-							<td id="db_images" class="db_status">...,...</td>
-							<td align="right">albums:</td>
-							<td id="db_albums" class="db_status">..,...</td>
-						</tr>
-						<tr>
-							<td align="right">posts:</td>
-							<td id="db_posts" class="db_status">...,...</td>
-							<td align="right">comments:</td>
-							<td id="db_comments" class="db_status">..,...</td>
-						</tr>
-						<tr>
-							<td align="center" colspan="4"><a href="javascript:menu_subreddit_click();" class="no_color">subreddits</a>:
-							<span id="db_subreddits" class="db_status">...</span></td>
-						</tr>
-					</table>
-				</td><td colspan="3" id="subreddit_dropdown" class="menu_dropdown">
-					<div id="subreddits"></div>
-				</td><td colspan="3" id="about_dropdown" class="menu_dropdown">
-					<table class="about_content">
-						<tr><td class="about_left">who?</td>
-							<td>created by <a class="bookmarklet" href="http://reddit.com/user/4_pr0n">4_pr0n</a></td></tr>
-						<tr class="border_spacer"><td class="about_left">what?</td>
-							<td>shows reddit posts, comments, and albums that contain an image</td></tr>
-						<tr class="border_spacer"><td class="about_left">when?</td>
-							<td>constantly scrapes images from day-old posts</td></tr>
-						<tr class="border_spacer"><td class="about_left">where?</td>
-							<td>from the weekly top 1,000 posts in the listed subreddits</td></tr>
-						<tr class="border_spacer"><td class="about_left">why?</td>
-							<td>the greater good</td></tr>
-						<tr><td class="about_left">how?</td><td> image comparison & python. see the source code on <a class="bookmarklet" href="https://github.com/4pr0n/irarchives" target="_BLANK">github</a></td></tr>
-					</table>
-				</td>
-			</tr></table> <!-- end of 'menu' table -->
-			
-			<table style="width: 100%;">
-				<tr><td>
-						<p class="footer" style="text-align: left; line-height: 120%;">suggestions or comments? <br>contact <a 
-					class="bookmarklet"
-					href="http://www.reddit.com/message/compose/?
-		to=4_pr0n&
-		subject=about%20i.rarchives.com&
-		message=I%20have%20a%20%3Ccomplaint%2C%20comment%2C%20suggestion%3E%3A"
-					>4_pr0n</a> via reddit
-				</p>
-				</td><td>
-				<p class="footer" style="text-align: right;">this site is not affiliated with reddit.com</p>
-			</td></tr></table> <!-- end of 'footer' table -->
-			
-		</td></tr></table> <!-- end of 'page' table -->
+		</table> <!-- end of 'page' table -->
 		
 		<script type="text/javascript" src="search.js"></script>
 	</body>

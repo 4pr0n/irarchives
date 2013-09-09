@@ -551,7 +551,7 @@ function getCookie(key) {
 
 function over18() {
 	if (getCookie('over18') != 'true') {
-		var body = document.getElementsByClassName('search')[0];
+		var body = document.body;
 		var out = '';
 		out += '<div class="over18">';
 		out += '<center>';
