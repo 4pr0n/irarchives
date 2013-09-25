@@ -341,7 +341,7 @@ def parse_album(url, postid=0, commentid=0):
 	# Download album
 	url = url + '/noscript'
 	r = web.get(url)
-	links = web.between(r, 'img src="http://i.', '"')
+	links = web.between(r, 'img src="//i.', '"')
 	for link in links:
 		link = 'http://i.%s' % link
 		if '?' in link: link = link[:link.find('?')]
