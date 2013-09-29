@@ -27,6 +27,9 @@ web = Httpy()
 ##############################
 # Database
 from DB import DB
+##############################
+# Command-line output
+from commands import getstatusoutput
 
 #################
 # Globals
@@ -105,6 +108,7 @@ def main():
 		Main loop of program. 
 		Infinitely iterates over the list of subreddits
 	"""
+	exit_if_already_started()
 	# Login to reddit acct or die
 	if not login(): return 
 	while True:
@@ -128,6 +132,16 @@ def main():
 				# Save current list in case script needs to be restarted
 				save_list(subreddits, 'subs_%s.txt' % timeframe)
 				time.sleep(2)
+
+def exit_if_already_started():
+	(status, output) = getstatusoutput('ps aux')
+	running_processes = 0
+	for line in output.split('\n'):
+		if 'python' in line and 'scan.py' in line:
+			running_processes += 1
+	if running_processes > 1:
+		print "process is already running, exiting"
+		exit(0) # Quit if the bot is already running
 
 def login():
 	""" Logs into reddit. Returns false if it can't """
@@ -389,6 +403,7 @@ def get_hashid_and_urlid(url, verbose=True):
 	# Download image
 	(file, temp_image) = tempfile.mkstemp(prefix='redditimg', suffix='.jpg')
 	close(file)
+	if url.startswith('//'): url = 'http:%s' % url
 	if verbose: print '      [+] downloading %s ...' % url,
 	stdout.flush()
 	if not web.download(url, temp_image):
