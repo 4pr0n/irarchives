@@ -300,7 +300,7 @@ def search_google(url):
 			chunk = r
 		if 'Visually similar images' in chunk:
 			chunk = chunk[:chunk.find('Visually similar images')]
-		images = web.between(chunk, 'href="/imgres?imgurl=', '&amp;imgref')
+		images = web.between(chunk, '/imgres?imgurl=', '&amp;imgref')
 		for image in images:
 			if time() > time_to_stop: break
 			splits = image.split('&')
