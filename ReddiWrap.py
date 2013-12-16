@@ -68,7 +68,6 @@ class Post(object):
 		self.upvotes       = 0
 		self.downvotes     = 0
 		self.over_18       = False # NSFW post
-		self.clicked       = False # If logged-in user has clicked link yet
 		self.hidden        = False
 		self.saved         = False
 		self.edited        = False
@@ -107,7 +106,6 @@ class Post(object):
 		self.upvotes       = data['ups']
 		self.downvotes     = data['downs']
 		self.over_18       = data['over_18']
-		self.clicked       = data['clicked']
 		self.hidden        = data['hidden']
 		self.saved         = data['saved']
 		self.edited        = data['edited']

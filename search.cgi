@@ -101,7 +101,7 @@ def search_url(url):
 		} )
 	
 def search_album(url):
-	url = url.replace('http://', '').replace('https://', '')
+	url = url.replace('http://', '').replace('https://', '').replace('m.imgur.com', 'imgur.com')
 	while url.endswith('/'): url = url[:-1]
 	while url.count('/') > 2: url = url[:url.rfind('/')]
 	if '?' in url: url = url[:url.find('?')]
@@ -135,7 +135,7 @@ def search_album(url):
 	else:
 		# Album is not indexed; need to scrape images
 		r = web.get('%s/noscript' % url)
-		image_urls = web.between(r, 'img src="http://i.', '"')
+		image_urls = web.between(r, 'img src="//i.', '"')
 		if len(image_urls) == 0:
 			print_error('empty imgur album (404?)')
 			return
@@ -381,7 +381,7 @@ def get_results_tuple_for_image(url):
 	
 	try:
 		(hashid, downloaded) = get_hashid(url)
-		if hashid == -1: # No hash matches
+		if hashid == -1 or hashid == 870075: # No hash matches
 			return (url, [], [], [], downloaded)
 		image_hashes = db.select('hash', 'Hashes', 'id = %d' % hashid)
 		if len(image_hashes) == 0: raise Exception('could not get hash for %s' % url)

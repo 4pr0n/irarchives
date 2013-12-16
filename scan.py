@@ -137,7 +137,7 @@ def exit_if_already_started():
 	(status, output) = getstatusoutput('ps aux')
 	running_processes = 0
 	for line in output.split('\n'):
-		if 'python' in line and 'scan.py' in line:
+		if 'python' in line and 'scan.py' in line and not '/bin/sh -c' in line:
 			running_processes += 1
 	if running_processes > 1:
 		print "process is already running, exiting"
