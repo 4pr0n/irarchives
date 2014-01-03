@@ -200,14 +200,17 @@ def search_user(user):
 		# Get image's URL, dimensions & size
 		if commentid != 0:
 			# Comment
-			comment_dict = build_comment(commentid, urlid, albumid)
-			comments.append(comment_dict)
+			try:
+				comment_dict = build_comment(commentid, urlid, albumid)
+				comments.append(comment_dict)
+			except: pass
 		else:
 			# Post
-			post_dict = build_post(postid, urlid, albumid)
-			posts.append(post_dict)
-			
-			related += build_related_comments(postid, urlid, albumid)
+			try:
+				post_dict = build_post(postid, urlid, albumid)
+				posts.append(post_dict)
+				related += build_related_comments(postid, urlid, albumid)
+			except: pass
 	posts    = sort_by_ranking(posts)
 	comments = sort_by_ranking(comments)
 	print json.dumps( {
@@ -253,14 +256,17 @@ def search_text(text):
 		# Get image's URL, dimensions & size
 		if commentid != 0:
 			# Comment
-			comment_dict = build_comment(commentid, urlid, albumid)
-			comments.append(comment_dict)
+			try:
+				comment_dict = build_comment(commentid, urlid, albumid)
+				comments.append(comment_dict)
+			except: pass
 		else:
 			# Post
-			post_dict = build_post(postid, urlid, albumid)
-			posts.append(post_dict)
-			
-			related += build_related_comments(postid, urlid, albumid)
+			try:
+				post_dict = build_post(postid, urlid, albumid)
+				posts.append(post_dict)
+				related += build_related_comments(postid, urlid, albumid)
+			except: pass
 	posts    = sort_by_ranking(posts)
 	comments = sort_by_ranking(comments)
 	print json.dumps( {
@@ -407,17 +413,21 @@ def get_results_tuple_for_hash(url, image_hash, downloaded):
 		# Get image's URL, dimensions & size
 		if commentid != 0:
 			# Comment
-			comment_dict = build_comment(commentid, urlid, albumid)
-			if comment_dict['author'] == 'rarchives': continue
-			comments.append(comment_dict)
+			try:
+				comment_dict = build_comment(commentid, urlid, albumid)
+				if comment_dict['author'] == 'rarchives': continue
+				comments.append(comment_dict)
+			except: pass
 		else:
 			# Post
-			post_dict = build_post(postid, urlid, albumid)
-			posts.append(post_dict)
-			
-			for rel in build_related_comments(postid, urlid, albumid):
-				if rel['author'] == 'rarchives': continue
-				related.append(rel)
+			try:
+				post_dict = build_post(postid, urlid, albumid)
+				posts.append(post_dict)
+				
+				for rel in build_related_comments(postid, urlid, albumid):
+					if rel['author'] == 'rarchives': continue
+					related.append(rel)
+			except: pass
 	
 	for com in comments:
 		for rel in related:

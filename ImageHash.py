@@ -20,7 +20,7 @@ def avhash(im):
 	"""
 	if not isinstance(im, Image.Image):
 		im = Image.open(im)
-	im = im.resize((16, 16), Image.ANTIALIAS).convert('L')
+	im = im.convert('L').resize((16, 16), Image.ANTIALIAS)
 	ttl = 0
 	for gd in im.getdata(): ttl += gd
 	avg = ttl / 256
