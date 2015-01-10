@@ -706,7 +706,7 @@ def sanitize_url(url):
 				url = web.between(r, '"image_src" href="', '"')[0]
 			else:
 				raise Exception("unable to find imgur image (404?)")
-	elif 'gfycat.com' in url:
+	elif 'gfycat.com' in url and not 'thumbs.gfycat.com' in url:
 		r = web.get(url)
 		if "og:image' content='" in r:
 			url = web.between(r, "og:image' content='", "'")[-1]

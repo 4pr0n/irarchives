@@ -160,7 +160,7 @@ function handleSearchResponse(responseText) {
 	if (resp['images'] != null) {
 		// Image results for (cached) album
 		var out = '<center><table>';
-		out += '<tr><td colspan="5" class="search_result_title">' + resp.images.length + ' album images</td></tr>';
+		out += '<tr><td colspan="5" class="search_result_title">' + resp.images.length + ' album images (imgur)</td></tr>';
 		out += '<tr>';
 		for (var i = 0; i < resp.images.length; i++) {
 			var url = resp.images[i].url;
@@ -181,6 +181,19 @@ function handleSearchResponse(responseText) {
 			out += '</td>';
 			if (i % 5 == 4) {
 				out += '</tr><tr>';
+			}
+		}
+		out += '</td></tr>';
+		out += '<tr><td colspan="5" class="search_result_title">' + resp.images.length + ' thumbnails (rarchives)</td></tr>';
+		out += '<tr>';
+		for (var i = 0; i < resp.images.length; i++) {
+			if (resp.images[i].thumb) {
+				out += '<td><img src="' + resp.images[i].thumb + '"></img></td>';
+			} else {
+				out += '<td>(none)</td>';
+				if (i % 5 == 4) {
+					out += '</tr><tr>';
+				}
 			}
 		}
 		out += '</td></tr>';

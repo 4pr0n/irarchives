@@ -318,8 +318,9 @@ def parse_url(url, postid=0, commentid=0):
 		else:
 			# Indirect imgur link (e.g. "imgur.com/abcde")
 			r = web.get(url)
-			if '"image_src" href="' in r:
-				url = web.between(r, '"image_src" href="', '"')[0]
+			if '"image_src"' in r:
+				chunk = web.between(r, '"image_src"', '>')[0]
+				url = web.between(chunk, 'href="', '"')[0]
 			else:
 				print '\n      [!] unable to find direct imgur link for %s (404?)' % url
 				return False
