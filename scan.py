@@ -323,12 +323,42 @@ def parse_url(url, postid=0, commentid=0):
 			else:
 				print '\n      [!] unable to find direct imgur link for %s (404?)' % url
 				return False
+
 	elif url.lower().endswith('.jpg') or \
 			url.lower().endswith('.jpeg') or \
 			url.lower().endswith('.png')  or \
 			url.lower().endswith('.gif'):
 		# Direct link to non-imgur image
 		pass # Drop out of if statement & parse image
+
+	elif 'gfycat.com' in url:
+		r = web.get(url)
+		if "og:image' content='" in r:
+			url = web.between(r, "og:image' content='", "'")[-1]
+		else:
+			print '\n      [!] unable to find gfycat image for ' % url
+			return False
+
+	elif 'mediacru.sh' in url:
+		r = web.get(url)
+		if 'property="og:type" content="' not in r:
+			content = web.between(r, 'property="og:type" content="', '')[0]
+			if not content.startswith('image'):
+				print '\n      [!] got non-image content "%s" for %s ' % (content, url)
+				return False
+			if content == '':
+				# Album (?)
+				print ''
+				result = parse_album_mediacrush(url, postid=postid, commentid=commentid)
+				db.commit()
+				return result
+			else:
+				# Single image (?)
+				if 'property="og:image" content="' in r:
+					url = web.between(r, '"og:image" content="', '"')[0]
+		else:
+			print '\n      [!] unable to find mediacru.sh image for ' % url
+			return False
 	else:
 		# Not imgur, not a direct link; no way to parse
 		# TODO Develop a way to find images in other websites?
@@ -337,6 +367,19 @@ def parse_url(url, postid=0, commentid=0):
 	result = parse_image(url, postid=postid, commentid=commentid)
 	db.commit()
 	return result
+
+def parse_album_mediacrush(url, postid=0, commentid=0):
+	""" Indexes every image in an mediacru.sh album """
+	from json import loads
+	json = loads(web.get('%s.json' % url))
+	files = json['files']
+	for fil in files:
+		parse_image(fil['url'], postid=postid, commentid=commentid, albumid=albumid)
+	if len(files) == 0:
+		print '      [!] no images found in album!'
+		return False
+	else:
+		return True
 
 def parse_album(url, postid=0, commentid=0):
 	""" Indexes every image in an imgur album """
