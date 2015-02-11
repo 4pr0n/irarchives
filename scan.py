@@ -337,7 +337,7 @@ def parse_url(url, postid=0, commentid=0):
 		if "og:image' content='" in r:
 			url = web.between(r, "og:image' content='", "'")[-1]
 		else:
-			print '\n      [!] unable to find gfycat image for ' % url
+			print '\n      [!] unable to find gfycat image for %s' % url
 			return False
 
 	elif 'mediacru.sh' in url:
